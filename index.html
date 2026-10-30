@@ -163,6 +163,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); fon
 .gc-tablewrap { max-height: none; overflow-x: auto; overflow-y: visible; }
 #datos .gc-tablewrap { overflow: auto; }
 .gc-table { table-layout: auto; }
+#tabla td.gap { color: var(--color-fg-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .gc-table th, .gc-table th.l { white-space: normal; text-align: center; vertical-align: middle; line-height: 1.2; padding: 6px 4px; font-size: 10px; letter-spacing: .03em; word-break: keep-all; overflow-wrap: normal; hyphens: manual; }
 .gc-table td { font-size: calc(var(--cds-font-size-body) * .95); }
 .gc-table td { text-align: center; vertical-align: middle; padding: 5px 6px; }
@@ -662,7 +663,7 @@ window.GC = (() => {
 
 dash.calc('tabla', {
   inputs: ['puntos'], title: 'Tabla por temporada',
-  description: 'Fase regular (sin el Championship), por jugador y temporada: puntos (lugar + extra; con la recuperativa 2026, se borra el peor resultado —0 si faltó a una fecha— cuando la recuperativa lo supera), fechas jugadas, victorias, ranking competitivo, distancia al de arriba, ajuste de hándicap del Championship y zona de castigo.',
+  description: 'Fase regular (sin el Championship), por jugador y temporada: puntos (lugar + extra; con la recuperativa 2026, se borra el peor resultado —0 si faltó a una fecha— cuando la recuperativa lo supera), fechas jugadas, victorias, ranking competitivo, distancia al líder y al de arriba, ajuste de hándicap del Championship y zona de castigo.',
   fn: (puntos) => {
     const HCP = { 1: 5, 2: 4, 3: 3, 4: 2, 5: -2, 6: -3, 7: -4, 8: -5 };
     const out = [];
@@ -692,6 +693,7 @@ dash.calc('tabla', {
       list.forEach((r) => {
         const above = list.filter((o) => o.total > r.total + 1e-9);
         r.gap_arriba = above.length ? Math.round((d3.min(above, (o) => o.total) - r.total) * 100) / 100 : 0;
+        r.gap_lider = Math.round((d3.max(list, (o) => o.total) - r.total) * 100) / 100;
         r.prom_fecha = Math.round((r.total / r.fechas) * 100) / 100;
         r.ajuste_hcp = HCP[r.pos] ?? null;
         r.zona = r.pos === n ? 'Último · paga $200.000' : r.pos === n - 1 ? 'Penúltimo · paga $100.000' : r.pos === 1 ? 'Líder' : '';
@@ -1291,7 +1293,7 @@ dash.calc('analisis', {
       const best = Object.fromEntries(fechas.map((f) => [f, d3.max(rows.filter((x) => x.fecha === f), (x) => +x.pts_total)]));
       const th = (txt, sub, cls) => { const e = document.createElement('th'); e.textContent = txt; if (cls) e.className = cls; if (sub) { const sp = document.createElement('span'); sp.className = 'tp'; sp.textContent = sub; e.appendChild(sp); } return e; };
       const hr = document.createElement('tr');
-      hr.append(th('#'), th('Jugador', null, 'l'), ...fechas.map((f) => th(fdate(f), `${info[f].cancha}${info[f].tipo !== 'Regular' ? ' · ' + info[f].tipo : ''}`)), th('Total'));
+      hr.append(th('#'), th('Jugador', null, 'l'), ...fechas.map((f) => th(fdate(f), `${info[f].cancha}${info[f].tipo !== 'Regular' ? ' · ' + info[f].tipo : ''}`)), th('Total'), th('Dif. 1º'), th('Dif. al de arriba'));
       tbl.tHead.replaceChildren(hr);
       const sl = sel();
       const showWorst = s === 2026 && document.getElementById('worst-toggle').checked;
@@ -1320,6 +1322,8 @@ dash.calc('analisis', {
           tr.append(cell);
         });
         tr.append(td(nf.format(x.total), 'tot', 'tabla', 'total', ww));
+        const dif = (v) => (v > 0 ? '−' + nf.format(v) : '—');
+        tr.append(td(dif(x.gap_lider), 'gap', 'tabla', 'gap_lider', ww), td(dif(x.gap_arriba), 'gap', 'tabla', 'gap_arriba', ww));
         return tr;
       }));
     }
