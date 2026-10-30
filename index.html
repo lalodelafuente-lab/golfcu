@@ -366,7 +366,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); fon
     <section class="gc-card" id="proy-card">
       <h2>Expectativas 2026 · Turbo 30 oct (×1,5) y 7 nov</h2>
       <div class="gc-tablewrap"><table class="gc-table" id="proy" data-source="proyeccion" data-row-key="jugador"><thead><tr>
-        <th class="l" data-field="jugador">Jugador</th><th data-field="pos_actual">Hoy</th><th data-field="actual">Pts hoy</th><th data-field="asistencia">Prob. de asistir</th><th data-field="proyectado">Pts proyectados</th><th data-field="p_campeon">Campeón regular</th><th data-field="p_podio">Podio</th><th data-field="p_paga">Paga</th>
+        <th class="l" data-field="jugador">Jugador</th><th data-field="pos_actual">Hoy</th><th data-field="actual">Pts hoy</th><th data-field="proyectado">Pts proyectados</th><th data-field="p_campeon">Campeón regular</th><th data-field="p_podio">Podio</th><th data-field="p_paga">Paga</th>
       </tr></thead><tbody></tbody></table></div>
     </section>
 
@@ -1021,7 +1021,7 @@ dash.calc('perfil', {
 
 dash.calc('proyeccion', {
   inputs: ['tabla', 'puntos', 'estacion', 'premios'], title: 'Expectativas 2026 (simulación)',
-  description: 'Simulación de la fecha que queda de la fase regular 2026: la regular del 07/11, en primavera (la Turbo del 30/10 ya está jugada). Asiste cada jugador según su asistencia 2026; su Stableford sale de sus rondas reales ajustadas a primavera; los lugares dan puntos según cuántos juegan; y los 5 premios extra de 10 pts se sortean entre los presentes según los premios ganados en 2025–2026 Para medir la incertidumbre se remuestrean (bootstrap) las rondas y la asistencia de cada jugador 400 veces y se simulan 200 temporadas en cada una: la probabilidad de campeón regular y de podio es el promedio y su intervalo de confianza del 95% son los percentiles 2,5 y 97,5; el veredicto se basa en ese intervalo.',
+  description: 'Simulación de la fecha que queda de la fase regular 2026: la regular del 07/11, en primavera (la Turbo del 30/10 ya está jugada). Asiste cada jugador según su asistencia 2026; su Stableford sale de sus rondas reales ajustadas a primavera; los lugares dan puntos según cuántos juegan; y los 5 premios extra de 10 pts se sortean entre los presentes según los premios ganados en 2025–2026. Para medir la incertidumbre se remuestrean (bootstrap) las rondas y la asistencia de cada jugador 400 veces y se simulan 200 temporadas en cada una: la probabilidad de campeón regular y de podio es el promedio y su intervalo de confianza del 95% son los percentiles 2,5 y 97,5; el veredicto se basa en ese intervalo.',
   fn: (tabla, puntos, estacion, premios) => {
     const FECHAS = [{ mult: 1 }];
     const TABLA = { 8: [100, 80, 70, 60, 50, 40, 30, 20], 7: [94, 74, 65, 56, 46, 37, 28], 6: [88, 70, 61, 53, 44, 34], 5: [83, 67, 58, 50, 42], 4: [81, 65, 57, 47] };
@@ -1777,7 +1777,6 @@ dash.calc('analisis', {
       { val: (r) => r.jugador, show: (r) => pname(r.jugador), l: true },
       { val: (r) => r.pos_actual, show: (r) => `${r.pos_actual}º`, num: true },
       { val: (r) => r.actual, show: (r) => nf.format(r.actual), num: true },
-      { val: (r) => r.asistencia, show: (r) => pf.format(r.asistencia), num: true, cls: () => 'mut' },
       { val: (r) => r.proyectado, show: (r) => nf.format(r.proyectado), num: true, cls: () => 'tot' },
       { val: (r) => r.p_campeon, show: (r) => bar(r.p_campeon, GC.PAL[1]), num: true },
       { val: (r) => r.p_podio, show: (r) => bar(r.p_podio, GC.PAL[0]), num: true },
