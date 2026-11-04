@@ -2119,7 +2119,9 @@ dash.calc('analisis', {
     const canchas = [...new Set(campos.map((c) => c.cancha))].sort();
     const last = {}; hoyos.forEach((h) => { if (!last[h.jugador] || h.fecha > last[h.jugador].f) last[h.jugador] = { f: h.fecha, hcp: +h.hcp }; });
     // Hcp de juego por cancha informado por el grupo (app ChileGolf; tope 18 Ley JPE). Sin dato: queda en blanco para escribirlo a mano.
-    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 } };
+    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 }, 'Cachagua': { LALO: 9, LAA: 10, JPA: 10, PIS: 11, JPE: 9, MAP: 16, VCV: 16, CSC: 13 } };
+    // Cachagua: LALO confirmado (9); el resto estimado en proporción a Los Leones (× 9/11) hasta tener los pantallazos
+    TC.est = { 'Cachagua': { LAA: 10, JPA: 10, PIS: 11, JPE: 9, MAP: 16, VCV: 16, CSC: 13 } };
     const hcpDe = (c, j) => (HCP_CANCHA[c] && HCP_CANCHA[c][j] != null ? Math.min(18, HCP_CANCHA[c][j]) : '');
     PLAYERS.forEach((j) => { TC.jug[j] = { on: true, hcp: hcpDe(TC.cancha, j), rival: '' }; });
     const opt = (v, t, s) => `<option value="${esc(v)}"${s ? ' selected' : ''}>${esc(t)}</option>`;
@@ -2205,7 +2207,7 @@ dash.calc('analisis', {
     const tubosTxt = TC.tipo === 'Turbo' && TC.tubos.length ? `<div class="leg tubos"><b>Tubos Turbo:</b> ${TC.tubos.map((t) => `${esc(t.k)}${t.h ? ' H' + t.h : ''}${t.n > 1 ? ' (' + t.n + ')' : ''}`).join(' · ')}</div>` : '';
     return `<div class="tc-card${tubosTxt ? ' t3' : ''}${X ? ' ej' : ''}">
       <div class="band"><div><div class="logo">GOLFCU</div><div class="est">${esc(TC.tipo === 'Regular' ? 'Fecha regular' : TC.tipo)} · 2026 · Organiza ${esc(TC.organiza)}</div></div>
-        <div class="mid"><div class="player">${esc(j)}</div><div class="date">hcp de juego <b>${hc == null ? '____' : hc}</b>${TC.tipo === 'Championship' ? ' (ajustado)' : ''} · ${esc(grupo)}</div></div>
+        <div class="mid"><div class="player">${esc(j)}</div><div class="date">hcp de juego <b>${hc == null ? '____' : hc}</b>${hc != null && !ex && (TC.est?.[TC.cancha] || {})[j] === hc ? ' (est.)' : ''}${TC.tipo === 'Championship' ? ' (ajustado)' : ''} · ${esc(grupo)}</div></div>
         <div class="rt">${TC.tipo !== 'Regular' ? `<div class="turbo">${esc(TC.tipo.toUpperCase())} <span>${esc(TIPOS[TC.tipo])}</span></div>` : ''}<div class="grp">${esc(fechaLarga(TC.fecha))} · Salida ${(() => { const h = grupo === 'Grupo B' && TC.hora2 ? TC.hora2 : TC.hora; return h ? esc(h) : '___:___'; })()}</div></div></div>
       <div class="course"><span class="cl">Cancha</span> <span class="cn">${esc(TC.cancha)}</span> <span class="cd">Par ${sum(par)} · Ida ${sum(par.slice(0, 9))} · Vuelta ${sum(par.slice(9))}</span></div>
       <table><colgroup><col class="c-lab">${'<col class="c-h">'.repeat(9)}<col class="c-s">${'<col class="c-h">'.repeat(9)}<col class="c-s"><col class="c-s"></colgroup>
