@@ -201,7 +201,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); fon
 .tc-cut { font: 7pt Arial, sans-serif; color: #999; border-top: 0.2mm dashed #aaa; padding-top: 1mm; }
 /* la tarjeta impresa: colores fijos de papel */
 .tc-card { --g:#0B6B47; --gd:#06432C; --gold:#E8C547; --red:#B3261E; --ink:#1d2a24; --rule:#9fb3a8; --soft:#eef4f0; width:200mm; height:100mm; border:0.5mm solid var(--g); border-radius:2.5mm; overflow:hidden; display:flex; flex-direction:column; background:#fff; color:var(--ink); font-family: Georgia, 'Times New Roman', serif; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
-.tc-card .band { background:var(--g); color:#fff; display:grid; grid-template-columns: 40mm 1fr 50mm; align-items:center; padding:1.6mm 4mm; height:12.5mm; border-bottom:0.8mm solid var(--gold); }
+.tc-card .band { background:var(--g); color:#fff; display:grid; grid-template-columns: 38mm 57.5mm 1fr; align-items:center; padding:1.6mm 4mm; height:12.5mm; border-bottom:0.8mm solid var(--gold); }
 .tc-card .logo { color:var(--gold); font-size:15pt; letter-spacing:0.18em; line-height:1; }
 .tc-card .est { font-style:italic; font-size:6.3pt; opacity:.85; margin-top:0.8mm; }
 .tc-card .mid { text-align:center; }
@@ -217,9 +217,14 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); fon
 .tc-card .course .cd { margin-left:auto; font: 6.5pt Arial, sans-serif; color:#5b6d63; }
 .tc-card table { border-collapse:collapse; width:100%; table-layout:fixed; font-family: Arial, Helvetica, sans-serif; }
 .tc-card th, .tc-card td { border:0.2mm solid var(--rule); text-align:center; padding:0; background:none; color:inherit; text-transform:none; letter-spacing:0; position:static; }
-.tc-card th.lab { width:22mm; text-align:left; padding-left:1.8mm; font-weight:normal; font-size:7pt; color:var(--gd); font-family: Georgia, serif; }
-.tc-card th.lab.sm { font-size:5.8pt; text-transform:uppercase; letter-spacing:.08em; color:#5b6d63; }
-.tc-card td.sub { width:8.2mm; background:var(--soft); }
+.tc-card th.lab { text-align:left; padding-left:1mm; white-space:normal; line-height:1.05; overflow:hidden; font-weight:normal; font-size:7pt; color:var(--gd); font-family: Georgia, serif; }
+.tc-card th.lab.sm { font-size:5.4pt; text-transform:uppercase; letter-spacing:.02em; color:#5b6d63; }
+.tc-card td.sub { background:var(--soft); }
+.tc-card col.c-lab, .tc-card col.c-s { width:13mm; }
+.tc-card col.c-h { width:8.1667mm; }
+.tc-card { position:relative; }
+.tc-card::before, .tc-card::after { content:''; position:absolute; left:99.5mm; width:0; height:3mm; border-left:0.3mm dashed var(--gold); z-index:2; }
+.tc-card::before { top:0; } .tc-card::after { bottom:0; border-left-color:#9fb3a8; }
 .tc-card tr.r-h th, .tc-card tr.r-h td { background:var(--g); color:#fff; height:5mm; font-size:7.5pt; font-weight:bold; border-color:var(--gd); }
 .tc-card tr.r-h th.lab { color:var(--gold); font-weight:normal; }
 .tc-card tr.r-h td.sub { background:var(--gd); font-size:6pt; letter-spacing:.06em; }
@@ -242,7 +247,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); fon
 .tc-card tr.stbrow th.lab, .tc-card tr.stbrow td { height:5.4mm; border-top:0.3mm solid var(--g); background:#fff; }
 .tc-card tr.mt th.lab, .tc-card tr.mt td { height:4.7mm; background:#fffdf3; }
 .tc-card tr.mt-first th.lab, .tc-card tr.mt-first td { border-top:0.35mm solid var(--gold); }
-.tc-card tr.mt .ln { width:12mm; }
+.tc-card tr.mt .ln { width:5mm; }
 .tc-card .ln { display:inline-block; width:9mm; border-bottom:0.25mm solid #8aa094; }
 .tc-card .rv { color:var(--gd); font-family: Georgia, serif; letter-spacing:.05em; }
 .tc-card .hint { font-size:4.8pt; letter-spacing:.04em; color:#8aa094; }
@@ -2156,6 +2161,22 @@ dash.calc('analisis', {
   };
 
   let TC_CAMPOS = [];
+  const tcRows = () => {
+    const P = TC.premios, T = TC.tipo === 'Turbo' ? TC.tubos.map((t) => t.k) : [];
+    const has = (k) => k in P, ht = (k) => T.includes(k);
+    const r = {
+      pares: has('Más Pares o Mejor') || has('Más Pares') || ht('Scrambling'),
+      fir: has('FIR'),
+      putts: has('Menos Putts') || has('GIR') || ht('Menos 3 putts') || ht('Scrambling') || ht('Dardos'),
+      gir: has('GIR') || ht('Scrambling'),
+      sandy: has('Sandy Par'),
+      dardos: ht('Dardos'),
+    };
+    const n = ['pares', 'fir', 'putts', 'gir', 'sandy', 'dardos'].filter((k) => r[k]).length;
+    r.matches = Math.max(2, 3 + (4 - n));
+    r.anota = [r.putts && 'putts', r.gir && 'GIR', r.fir && 'fairways'].filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' y $1');
+    return r;
+  };
   const tcCard = (j, hcp, grupo, holes, ex) => {
     const par = holes.map((h) => +h.par), si = holes.map((h) => +h.si);
     const sum = (a) => a.reduce((x, y) => x + y, 0);
@@ -2171,6 +2192,7 @@ dash.calc('analisis', {
       X = { sc, pts, pu, gir, po, S };
     }
     const hw = (v) => `<span class="hw">${v}</span>`;
+    const R = tcRows();
     const sym = (i) => { const d = X.sc[i] - par[i]; const c = d <= -2 ? 'ci2' : d === -1 ? 'ci' : d === 1 ? 'sq' : d >= 2 ? 'sq2' : ''; return `<span class="hw${c ? ' hs ' + c : ''}">${X.sc[i]}${ex.d[i] === 'X' ? '*' : ''}</span>`; };
     const premH = {}; const addH = (h, t) => { (premH[h] = premH[h] || []).push(t); };
     Object.entries(TC.premios).forEach(([k, hs]) => { if (hs) hs.forEach((h, n) => addH(h, { t: CATS.find((c) => c.k === k).ab, alt: n > 0 })); });
@@ -2186,23 +2208,23 @@ dash.calc('analisis', {
         <div class="mid"><div class="player">${esc(j)}</div><div class="date">hcp de juego <b>${hc == null ? '____' : hc}</b>${TC.tipo === 'Championship' ? ' (ajustado)' : ''} · ${esc(grupo)}</div></div>
         <div class="rt">${TC.tipo !== 'Regular' ? `<div class="turbo">${esc(TC.tipo.toUpperCase())} <span>${esc(TIPOS[TC.tipo])}</span></div>` : ''}<div class="grp">${esc(fechaLarga(TC.fecha))} · Salida ${(() => { const h = grupo === 'Grupo B' && TC.hora2 ? TC.hora2 : TC.hora; return h ? esc(h) : '___:___'; })()}</div></div></div>
       <div class="course"><span class="cl">Cancha</span> <span class="cn">${esc(TC.cancha)}</span> <span class="cd">Par ${sum(par)} · Ida ${sum(par.slice(0, 9))} · Vuelta ${sum(par.slice(9))}</span></div>
-      <table>
+      <table><colgroup><col class="c-lab">${'<col class="c-h">'.repeat(9)}<col class="c-s">${'<col class="c-h">'.repeat(9)}<col class="c-s"><col class="c-s"></colgroup>
         <tr class="r-h"><th class="lab">Hoyo</th>${row((i) => isN(i) ? `<div class="hz">${pz(premH[i + 1])}</div><div class="hn">${i + 1}</div>` : { ida: 'IDA', vta: 'VTA', tot: 'TOT', stb: 'STB' }[i])}</tr>
         <tr class="r-m"><th class="lab sm">Yardas</th>${(() => { const yv = d3.range(1, 19).map((h) => +TC.metros[h] || 0); const ok = (a, z) => yv.slice(a, z).every((v) => v > 0); const sm = (a, z) => (ok(a, z) ? d3.sum(yv.slice(a, z)) : ''); return row((i) => isN(i) ? esc(TC.metros[i + 1] || '') : { ida: sm(0, 9), vta: sm(9, 18), tot: sm(0, 18), stb: '' }[i]); })()}</tr>
         <tr class="r-p"><th class="lab sm">Par</th>${row((i) => isN(i) ? par[i] : { ida: sum(par.slice(0, 9)), vta: sum(par.slice(9)), tot: sum(par), stb: '' }[i])}</tr>
         <tr class="r-s"><th class="lab sm">Hándicap</th>${row((i) => isN(i) ? si[i] : '')}</tr>
         <tr class="pl"><th class="lab"><span class="nm">Score</span></th>${row((i) => isN(i) ? `<span class="dots">${'•'.repeat(rec(i))}</span>` + (X ? sym(i) : '') : (X ? hw({ ida: X.S(0, 9, (k) => X.sc[k]), vta: X.S(9, 18, (k) => X.sc[k]), tot: X.S(0, 18, (k) => X.sc[k]), stb: X.S(0, 18, (k) => X.pts[k]) }[i]) : ''), 'g')}</tr>
-        <tr class="ex stbrow"><th class="lab sm">Pts Stableford</th>${row((i) => !X ? '' : isN(i) ? hw(X.pts[i]) : hw({ ida: X.S(0, 9, (k) => X.pts[k]), vta: X.S(9, 18, (k) => X.pts[k]), tot: X.S(0, 18, (k) => X.pts[k]), stb: '' }[i]))}</tr>
-        <tr class="ex"><th class="lab sm">Pares o mejor</th>${row((i) => isN(i) ? `<span class="box">${X && X.po[i] ? hw('✓') : ''}</span>` : (X ? hw({ ida: X.S(0, 9, (k) => +X.po[k]), vta: X.S(9, 18, (k) => +X.po[k]), tot: X.S(0, 18, (k) => +X.po[k]), stb: '' }[i]) : ''))}</tr>
-        <tr class="ex"><th class="lab sm">Putts</th>${row((i) => !X ? '' : isN(i) ? hw(X.pu[i] ?? '–') : hw({ ida: X.S(0, 9, (k) => X.pu[k] || 0), vta: X.S(9, 18, (k) => X.pu[k] || 0), tot: X.S(0, 18, (k) => X.pu[k] || 0), stb: '' }[i]))}</tr>
-        <tr class="ex"><th class="lab sm">GIR</th>${row((i) => isN(i) ? `<span class="box">${X && X.gir[i] ? hw('✓') : ''}</span>` : (X ? hw({ ida: X.S(0, 9, (k) => +X.gir[k]), vta: X.S(9, 18, (k) => +X.gir[k]), tot: X.S(0, 18, (k) => +X.gir[k]), stb: '' }[i]) : ''))}</tr>
-        <tr class="ex"><th class="lab sm">Dardos</th>${row((i) => isN(i) ? `<span class="box">${X && ex.dardo.includes(i + 1) ? hw('✓') : ''}</span>` : (X ? hw({ ida: ex.dardo.filter((h) => h <= 9).length, vta: ex.dardo.filter((h) => h >= 10).length, tot: ex.dardo.length, stb: '' }[i]) : ''))}</tr>
-        <tr class="mt mt-first"><th class="lab sm">Match <span class="ln"></span></th>${row(() => '')}</tr>
-        <tr class="mt"><th class="lab sm">Match <span class="ln"></span></th>${row(() => '')}</tr>
-        <tr class="mt"><th class="lab sm">Match <span class="ln"></span></th>${row(() => '')}</tr>
+        <tr class="ex stbrow"><th class="lab sm">Puntos</th>${row((i) => !X ? '' : isN(i) ? hw(X.pts[i]) : hw({ ida: X.S(0, 9, (k) => X.pts[k]), vta: X.S(9, 18, (k) => X.pts[k]), tot: X.S(0, 18, (k) => X.pts[k]), stb: '' }[i]))}</tr>
+        ${R.pares ? `<tr class="ex"><th class="lab sm">Pares o mejor</th>${row((i) => isN(i) ? `<span class="box">${X && X.po[i] ? hw('✓') : ''}</span>` : (X ? hw({ ida: X.S(0, 9, (k) => +X.po[k]), vta: X.S(9, 18, (k) => +X.po[k]), tot: X.S(0, 18, (k) => +X.po[k]), stb: '' }[i]) : ''))}</tr>` : ''}
+        ${R.fir ? `<tr class="ex"><th class="lab sm">Fairway</th>${row((i) => isN(i) ? (par[i] === 3 ? '<span class="na">—</span>' : '<span class="box"></span>') : '')}</tr>` : ''}
+        ${R.putts ? `<tr class="ex"><th class="lab sm">Putts</th>${row((i) => !X ? '' : isN(i) ? hw(X.pu[i] ?? '–') : hw({ ida: X.S(0, 9, (k) => X.pu[k] || 0), vta: X.S(9, 18, (k) => X.pu[k] || 0), tot: X.S(0, 18, (k) => X.pu[k] || 0), stb: '' }[i]))}</tr>` : ''}
+        ${R.gir ? `<tr class="ex"><th class="lab sm">GIR</th>${row((i) => isN(i) ? `<span class="box">${X && X.gir[i] ? hw('✓') : ''}</span>` : (X ? hw({ ida: X.S(0, 9, (k) => +X.gir[k]), vta: X.S(9, 18, (k) => +X.gir[k]), tot: X.S(0, 18, (k) => +X.gir[k]), stb: '' }[i]) : ''))}</tr>` : ''}
+        ${R.sandy ? `<tr class="ex"><th class="lab sm">Sandy par</th>${row((i) => isN(i) ? '<span class="box"></span>' : '')}</tr>` : ''}
+        ${R.dardos ? `<tr class="ex"><th class="lab sm">Dardos</th>${row((i) => isN(i) ? `<span class="box">${X && ex.dardo.includes(i + 1) ? hw('✓') : ''}</span>` : (X ? hw({ ida: ex.dardo.filter((h) => h <= 9).length, vta: ex.dardo.filter((h) => h >= 10).length, tot: ex.dardo.length, stb: '' }[i]) : ''))}</tr>` : ''}
+        ${d3.range(ex ? 2 : R.matches).map((m) => `<tr class="mt${m === 0 ? ' mt-first' : ''}"><th class="lab sm">Match</th>${row(() => '')}</tr>`).join('')}
       </table>
       <div class="foot${tubosTxt ? ' f3' : ''}"><div class="leg"><b>Puntos extra (10 c/u):</b> ${(() => { const ORD = ['GIR', 'Best Approach', 'Long Drive', 'Más Pares o Mejor', 'Mejor Vuelta (Neto)', 'Menos Putts']; const ks = Object.keys(TC.premios).sort((x, y) => (ORD.indexOf(x) + 1 || 99) - (ORD.indexOf(y) + 1 || 99)); return ks.map((k, n) => { const hs = TC.premios[k]; return `${n + 1}. ` + (hs ? `<span class="pz">${CATS.find((c) => c.k === k).ab}</span> ${esc(k)} H${hs[0]}${hs.length > 1 ? ` (si no: ${hs.slice(1).map((x) => 'H' + x).join(', luego ')})` : ''}` : esc(k)); }).join(' · '); })()}</div>${tubosTxt}
-        ${X ? `<div class="leg ejnota"><b>Ejemplo:</b> ${ex.nota}</div>` : ''}<div class="leg2"><b>Ley JPE:</b> hcp máx. 18 · triple bogey o peor = 0 pts · <span class="red">•</span> = golpe recibido · anota putts y GIR en cada hoyo${TC.tipo === 'Recuperativa' ? ' · Recuperativa: puntaje × 0,8, borra tu peor resultado' : ''}</div>
+        ${X ? `<div class="leg ejnota"><b>Ejemplo:</b> ${ex.nota}</div>` : ''}<div class="leg2"><b>Ley JPE:</b> hcp máx. 18 · triple bogey o peor = 0 pts · <span class="red">•</span> = golpe recibido ${R.anota ? ' · anota ' + R.anota + ' en cada hoyo' : ''}${TC.tipo === 'Recuperativa' ? ' · Recuperativa: puntaje × 0,8, borra tu peor resultado' : ''}</div>
         <div class="sig sym"><span><i class="sy ci">4</i> Birdie</span><span><i class="sy sq">6</i> Bogey</span><span><i class="sy sq2">7</i> Doble bogey</span></div></div>
     </div>`;
   };
@@ -2220,10 +2242,13 @@ dash.calc('analisis', {
     });
     const EJ = [
       { d: [1, 0, 0, 1, 1, 1, 0, 1, 1, 1, -1, 1, 2, 0, -1, 3, 0, 1], pu: [2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 3, 2, 1, 3, 2, 2], dardo: [11, 15],
-        nota: 'encierra el score según la simbología; anota Pts, putts y ✓ en Pares o mejor y GIR. H11 y H15: dardos (✓ en Dardos). H16: triple bogey = 0 pts.' },
+        nota: null },
       { d: [2, 0, 1, 2, 'X', 0, 1, 1, 0, 1, 0, 2, 1, 0, 1, 2, 1, 1], pu: [2, 2, 2, 3, null, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 3, 2], dardo: [2],
-        nota: 'H5 no terminado (*): se anota el score mínimo sin puntos (par + 2 + golpes recibidos, tope par + 3), 0 pts y putts en blanco. H2: dardo y 2 putts. Totales: suma IDA, VTA y TOT.' },
+        nota: null },
     ];
+    { const R = tcRows(); const marca = [R.pares && 'Pares o mejor', R.gir && 'GIR'].filter(Boolean).join(' y ');
+      EJ[0].nota = `encierra el score según la simbología; anota los Pts${R.putts ? ', los putts' : ''}${marca ? ' y marca ✓ en ' + marca : ''}.${R.dardos ? ' H11 y H15: dardos (✓ en Dardos).' : ''} H16: triple bogey = 0 pts.`;
+      EJ[1].nota = `H5 no terminado (*): se anota el score mínimo sin puntos (par + 2 + golpes recibidos, tope par + 3) y 0 pts${R.putts ? '; los putts quedan en blanco' : ''}.${R.dardos ? ' H2: dardo.' : ''} Al final suma IDA, VTA y TOT.`; }
     cards.push(tcCard('EJEMPLO 1', 11, 'Cómo llenar la tarjeta', holes, EJ[0]), tcCard('EJEMPLO 2', 18, 'Hoyo sin terminar', holes, EJ[1]));
     let html = '';
     for (let i = 0; i < cards.length; i += 2) html += `<div class="tc-sheet">${cards[i]}${cards[i + 1] ? '<div class="tc-cut">✂ cortar</div>' + cards[i + 1] : ''}</div>`;
