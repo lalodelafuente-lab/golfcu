@@ -316,6 +316,14 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
 .gc-bases-t td, .gc-bases-t th { text-align: center; }
 .gc-bases-t td:first-child { font-weight: 600; }
 #bases .note { margin: 8px 0; }
+
+.gc-next { border-top-color: var(--gold, #C9A227); }
+.gc-next-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 16px; margin-bottom:10px; }
+.gc-next-head h2 { margin:0; }
+.gc-next-tag { color: var(--color-fg-muted); font-size: .92em; }
+.gc-next-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 24px; }
+.gc-next-grid h3 { font-family: var(--gc-serif); font-weight:400; margin:0 0 6px; color: var(--gc-ink); font-size:1.02em; }
+.gc-next-grid ul { margin:0; padding-left:18px; line-height:1.5; }
 </style></head>
 <body><div id="dash-root">
 
@@ -346,6 +354,15 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       <div class="gc-kpi"><div class="lbl">Último lugar</div><div class="val" id="k-ultimo" data-source="resumen" data-field="ultimo">—</div><div class="sub" id="k-ultimo-sub" data-source="resumen" data-field="ultimo_pts">—</div></div>
     </div>
 
+    <section class="gc-card gc-next" id="proxima-card" hidden>
+      <div class="gc-next-head"><h2>Última fecha regular · Definición del campeón regular</h2><span class="gc-next-tag">Sábado 7 de noviembre · Club de Golf Cachagua · Organiza JPA</span></div>
+      <div class="gc-next-grid">
+        <div><h3>9:50 · Grupo A</h3><ul><li>MAP</li><li>JPA</li><li>JPE</li><li>LALO</li></ul></div>
+        <div><h3>10:00 · Grupo B</h3><ul><li>VCV</li><li>PIS</li><li>LAA</li><li>CSC</li></ul></div>
+        <div><h3>Puntos extra (10 c/u)</h3><ul><li>GIR</li><li>Best Approach · hoyo 17</li><li>Long Drive · hoyo 18</li><li>Más pares o mejor</li><li>Mejor vuelta (neto)</li></ul></div>
+      </div>
+    </section>
+
     <section class="gc-card" id="tabla-general">
       <div class="gc-cardhead"><h2>Tabla general</h2><label class="gc-toggle" id="worst-toggle-wrap"><input type="checkbox" id="worst-toggle" checked> Marcar resultado a borrar (recuperativa)</label></div>
       <div class="gc-tablewrap"><table class="gc-table" id="tabla"><thead></thead><tbody></tbody></table></div>
@@ -373,7 +390,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
     </section>
 
     <section class="gc-card" id="proy-card">
-      <h2>Expectativas 2026 · última fecha regular, 7 nov</h2>
+      <h2>Expectativas 2026 · última fecha regular, 7 nov en Cachagua</h2>
       <div class="gc-tablewrap"><table class="gc-table" id="proy" data-source="proyeccion" data-row-key="jugador"><thead><tr>
         <th class="l" data-field="jugador">Jugador</th><th data-field="pos_actual">Hoy</th><th data-field="actual">Pts hoy</th><th data-field="proyectado">Pts proyectados</th><th data-field="p_campeon">Campeón regular</th><th data-field="p_podio">Podio</th><th data-field="p_paga">Paga</th>
       </tr></thead><tbody></tbody></table></div>
@@ -552,7 +569,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
             <label class="tc-f">Tipo<select id="tc-tipo"></select></label>
             <label class="tc-f">Organiza<select id="tc-org"></select></label>
             <label class="tc-f">Cancha<select id="tc-cancha" data-source="campos"></select></label>
-            <label class="tc-f">Salida grupo 1<input type="time" id="tc-hora" step="300"></label><label class="tc-f">Salida grupo 2<input type="time" id="tc-hora2" step="300"></label>
+            <label class="tc-f">Salida grupo A<input type="time" id="tc-hora" step="300"></label><label class="tc-f">Salida grupo B<input type="time" id="tc-hora2" step="300"></label>
           </div>
         </section>
         <section class="gc-card" id="tc-jug-card">
@@ -1379,6 +1396,7 @@ dash.calc('analisis', {
   // ================= TEMPORADA =================
   const renderTemporada = () => {
     const s = season(), w = `temporada=${s}`;
+    { const pd = dash.data('puntos'); document.getElementById('proxima-card').hidden = !(s === 2026 && pd.status === 'ok' && !pd.data.some((x) => x.fecha === '2026-11-07')); }
     renderProyeccion(s);
     const r = dash.data('resumen');
     const ids = ['takeaway', 'k-lider', 'k-lider-sub', 'k-ventaja', 'k-segundo', 'k-fechas', 'k-turbo', 'k-stb', 'k-stb-sub', 'k-ultimo', 'k-ultimo-sub'];
@@ -2033,7 +2051,7 @@ dash.calc('analisis', {
   ];
   const TUBOS_DEF = ['1er Score Neto', '1er Score Gross', 'Menos 3 putts', 'Scrambling', 'Más birdies o mejor', 'Putter del día', 'Dardos'];
   const TIPOS = { Regular: '', Turbo: '× 1,5', Recuperativa: '× 0,8', Scramble: '', Championship: 'Final' };
-  const TC = { init: false, fecha: '', tipo: 'Turbo', organiza: 'LALO', cancha: 'Los Leones', jug: {}, premios: { 'Long Drive': [16, 17, 18], 'Best Approach': [6, 14], 'Más Pares o Mejor': null, 'Menos Putts': null, 'GIR': null }, tubos: [], hora: '', metros: {} };
+  const TC = { init: false, fecha: '2026-11-07', tipo: 'Regular', organiza: 'JPA', cancha: 'Cachagua', jug: {}, premios: { 'GIR': null, 'Best Approach': [17], 'Long Drive': [18], 'Más Pares o Mejor': null, 'Mejor Vuelta (Neto)': null }, tubos: [], hora: '09:50', hora2: '10:00', metros: {} };
   const tcEl = (id) => document.getElementById(id);
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -2042,9 +2060,10 @@ dash.calc('analisis', {
   const tcBuildForm = (campos, hoyos, tabla) => {
     const canchas = [...new Set(campos.map((c) => c.cancha))].sort();
     const last = {}; hoyos.forEach((h) => { if (!last[h.jugador] || h.fecha > last[h.jugador].f) last[h.jugador] = { f: h.fecha, hcp: +h.hcp }; });
-    // Hcp vigente informado por el grupo (app ChileGolf, Los Leones salida Azul, 2026-10-28; tope 18 Ley JPE)
-    const HCP_VIGENTE = { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 };
-    PLAYERS.forEach((j) => { TC.jug[j] = { on: true, hcp: Math.min(18, HCP_VIGENTE[j] ?? (last[j] ? last[j].hcp : 18)), rival: '' }; });
+    // Hcp de juego por cancha informado por el grupo (app ChileGolf; tope 18 Ley JPE). Sin dato: queda en blanco para escribirlo a mano.
+    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 } };
+    const hcpDe = (c, j) => (HCP_CANCHA[c] && HCP_CANCHA[c][j] != null ? Math.min(18, HCP_CANCHA[c][j]) : '');
+    PLAYERS.forEach((j) => { TC.jug[j] = { on: true, hcp: hcpDe(TC.cancha, j), rival: '' }; });
     const opt = (v, t, s) => `<option value="${esc(v)}"${s ? ' selected' : ''}>${esc(t)}</option>`;
     tcEl('tc-cancha').innerHTML = canchas.map((c) => opt(c, c, c === TC.cancha)).join('');
     tcEl('tc-tipo').innerHTML = Object.keys(TIPOS).map((t) => opt(t, t, t === TC.tipo)).join('');
@@ -2060,7 +2079,8 @@ dash.calc('analisis', {
     const YARDAS = { 'Los Leones': [369, 409, 189, 508, 408, 181, 403, 407, 545, 337, 190, 378, 438, 165, 415, 433, 529, 511] };
     const yd = (c, h) => (YARDAS[c] ? YARDAS[c][h - 1] : '');
     tcEl('tc-metros').innerHTML = d3.range(1, 19).map((h) => `<label class="tc-m"><span>${h}</span><input type="text" inputmode="numeric" id="tc-mt-${h}" maxlength="4" value="${yd(TC.cancha, h)}"></label>`).join('');
-    tcEl('tc-cancha').addEventListener('change', () => { const c = tcEl('tc-cancha').value; d3.range(1, 19).forEach((h) => { tcEl(`tc-mt-${h}`).value = yd(c, h); }); });
+    tcEl('tc-cancha').addEventListener('change', () => { const c = tcEl('tc-cancha').value; d3.range(1, 19).forEach((h) => { tcEl(`tc-mt-${h}`).value = yd(c, h); }); PLAYERS.forEach((j) => { tcEl(`tc-hcp-${j}`).value = hcpDe(c, j); }); });
+    tcEl('tc-fecha').value = TC.fecha; tcEl('tc-hora').value = TC.hora; tcEl('tc-hora2').value = TC.hora2;
     TC.order = order; TC.pos = pos;
     tcEl('tarjetas').addEventListener('input', tcRead);
     tcEl('tarjetas').addEventListener('change', tcRead);
@@ -2069,7 +2089,7 @@ dash.calc('analisis', {
   };
   const tcRead = () => {
     TC.fecha = tcEl('tc-fecha').value; TC.tipo = tcEl('tc-tipo').value; TC.organiza = tcEl('tc-org').value; TC.cancha = tcEl('tc-cancha').value;
-    PLAYERS.forEach((j) => { TC.jug[j] = { on: tcEl(`tc-on-${j}`).checked, hcp: +tcEl(`tc-hcp-${j}`).value || 0 }; });
+    PLAYERS.forEach((j) => { const v = tcEl(`tc-hcp-${j}`).value.trim(); TC.jug[j] = { on: tcEl(`tc-on-${j}`).checked, hcp: v === '' ? null : +v }; });
     const prem = {}; let n = 0;
     CATS.forEach((c, i) => { const cb = tcEl(`tc-cat-${i}`); if (cb.checked) { n++; prem[c.k] = c.hoyo ? [tcEl(`tc-cath-${i}`).value, tcEl(`tc-cath2-${i}`).value, tcEl(`tc-cath3-${i}`).value].filter(Boolean).map(Number) : null; } });
     CATS.forEach((c, i) => { const cb = tcEl(`tc-cat-${i}`); cb.disabled = !cb.checked && n >= 5; });
@@ -2086,7 +2106,7 @@ dash.calc('analisis', {
   const tcCard = (j, hcp, grupo, holes, ex) => {
     const par = holes.map((h) => +h.par), si = holes.map((h) => +h.si);
     const sum = (a) => a.reduce((x, y) => x + y, 0);
-    const hc = Math.min(18, hcp);
+    const hc = hcp == null ? null : Math.min(18, hcp);
     const rec = (i) => (hc >= si[i] ? 1 : 0) + (hc >= si[i] + 18 ? 1 : 0);
     let X = null;
     if (ex) {
@@ -2110,8 +2130,8 @@ dash.calc('analisis', {
     const tubosTxt = TC.tipo === 'Turbo' && TC.tubos.length ? `<div class="leg tubos"><b>Tubos Turbo:</b> ${TC.tubos.map((t) => `${esc(t.k)}${t.h ? ' H' + t.h : ''}${t.n > 1 ? ' (' + t.n + ')' : ''}`).join(' · ')}</div>` : '';
     return `<div class="tc-card${tubosTxt ? ' t3' : ''}${X ? ' ej' : ''}">
       <div class="band"><div><div class="logo">GOLFCU</div><div class="est">${esc(TC.tipo === 'Regular' ? 'Fecha regular' : TC.tipo)} · 2026 · Organiza ${esc(TC.organiza)}</div></div>
-        <div class="mid"><div class="player">${esc(j)}</div><div class="date">hcp de juego <b>${hc}</b>${TC.tipo === 'Championship' ? ' (ajustado)' : ''} · ${esc(grupo)}</div></div>
-        <div class="rt">${TC.tipo !== 'Regular' ? `<div class="turbo">${esc(TC.tipo.toUpperCase())} <span>${esc(TIPOS[TC.tipo])}</span></div>` : ''}<div class="grp">${esc(fechaLarga(TC.fecha))} · Salida ${(() => { const h = grupo === 'Grupo 2' && TC.hora2 ? TC.hora2 : TC.hora; return h ? esc(h) : '___:___'; })()}</div></div></div>
+        <div class="mid"><div class="player">${esc(j)}</div><div class="date">hcp de juego <b>${hc == null ? '____' : hc}</b>${TC.tipo === 'Championship' ? ' (ajustado)' : ''} · ${esc(grupo)}</div></div>
+        <div class="rt">${TC.tipo !== 'Regular' ? `<div class="turbo">${esc(TC.tipo.toUpperCase())} <span>${esc(TIPOS[TC.tipo])}</span></div>` : ''}<div class="grp">${esc(fechaLarga(TC.fecha))} · Salida ${(() => { const h = grupo === 'Grupo B' && TC.hora2 ? TC.hora2 : TC.hora; return h ? esc(h) : '___:___'; })()}</div></div></div>
       <div class="course"><span class="cl">Cancha</span> <span class="cn">${esc(TC.cancha)}</span> <span class="cd">Par ${sum(par)} · Ida ${sum(par.slice(0, 9))} · Vuelta ${sum(par.slice(9))}</span></div>
       <table>
         <tr class="r-h"><th class="lab">Hoyo</th>${row((i) => isN(i) ? `<div class="hz">${pz(premH[i + 1])}</div><div class="hn">${i + 1}</div>` : { ida: 'IDA', vta: 'VTA', tot: 'TOT', stb: 'STB' }[i])}</tr>
@@ -2128,7 +2148,7 @@ dash.calc('analisis', {
         <tr class="mt"><th class="lab sm">Match <span class="ln"></span></th>${row(() => '')}</tr>
         <tr class="mt"><th class="lab sm">Match <span class="ln"></span></th>${row(() => '')}</tr>
       </table>
-      <div class="foot${tubosTxt ? ' f3' : ''}"><div class="leg"><b>Puntos extra (10 c/u):</b> ${(() => { const ORD = ['Más Pares o Mejor', 'Menos Putts', 'Best Approach', 'Long Drive', 'GIR']; const ks = Object.keys(TC.premios).sort((x, y) => (ORD.indexOf(x) + 1 || 99) - (ORD.indexOf(y) + 1 || 99)); return ks.map((k, n) => { const hs = TC.premios[k]; return `${n + 1}. ` + (hs ? `<span class="pz">${CATS.find((c) => c.k === k).ab}</span> ${esc(k)} H${hs[0]}${hs.length > 1 ? ` (si no: ${hs.slice(1).map((x) => 'H' + x).join(', luego ')})` : ''}` : esc(k)); }).join(' · '); })()}</div>${tubosTxt}
+      <div class="foot${tubosTxt ? ' f3' : ''}"><div class="leg"><b>Puntos extra (10 c/u):</b> ${(() => { const ORD = ['GIR', 'Best Approach', 'Long Drive', 'Más Pares o Mejor', 'Mejor Vuelta (Neto)', 'Menos Putts']; const ks = Object.keys(TC.premios).sort((x, y) => (ORD.indexOf(x) + 1 || 99) - (ORD.indexOf(y) + 1 || 99)); return ks.map((k, n) => { const hs = TC.premios[k]; return `${n + 1}. ` + (hs ? `<span class="pz">${CATS.find((c) => c.k === k).ab}</span> ${esc(k)} H${hs[0]}${hs.length > 1 ? ` (si no: ${hs.slice(1).map((x) => 'H' + x).join(', luego ')})` : ''}` : esc(k)); }).join(' · '); })()}</div>${tubosTxt}
         ${X ? `<div class="leg ejnota"><b>Ejemplo:</b> ${ex.nota}</div>` : ''}<div class="leg2"><b>Ley JPE:</b> hcp máx. 18 · triple bogey o peor = 0 pts · <span class="red">•</span> = golpe recibido · anota putts y GIR en cada hoyo${TC.tipo === 'Recuperativa' ? ' · Recuperativa: puntaje × 0,8, borra tu peor resultado' : ''}</div>
         <div class="sig sym"><span><i class="sy ci">4</i> Birdie</span><span><i class="sy sq">6</i> Bogey</span><span><i class="sy sq2">7</i> Doble bogey</span></div></div>
     </div>`;
@@ -2142,8 +2162,8 @@ dash.calc('analisis', {
     const cards = sel.map((j, i) => {
       const g = Math.floor(i / 4);
       let hcp = TC.jug[j].hcp;
-      if (TC.tipo === 'Championship') hcp = Math.max(0, hcp + (HCPADJ[TC.pos[j]] ?? 0));
-      return tcCard(j, hcp, `Grupo ${g + 1}`, holes);
+      if (TC.tipo === 'Championship' && hcp != null) hcp = Math.max(0, hcp + (HCPADJ[TC.pos[j]] ?? 0));
+      return tcCard(j, hcp, `Grupo ${'AB'[g] || g + 1}`, holes);
     });
     const EJ = [
       { d: [1, 0, 0, 1, 1, 1, 0, 1, 1, 1, -1, 1, 2, 0, -1, 3, 0, 1], pu: [2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 3, 2, 1, 3, 2, 2], dardo: [11, 15],
