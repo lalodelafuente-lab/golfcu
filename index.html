@@ -575,7 +575,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
             <label class="tc-f">Tipo<select id="tc-tipo"></select></label>
             <label class="tc-f">Organiza<select id="tc-org"></select></label>
             <label class="tc-f">Cancha<select id="tc-cancha" data-source="campos"></select></label>
-            <label class="tc-f">Salida grupo A<input type="time" id="tc-hora" step="300"></label><label class="tc-f">Salida grupo B<input type="time" id="tc-hora2" step="300"></label>
+            <label class="tc-f">Salida grupo A<input type="time" id="tc-hora" step="300"></label><label class="tc-f">Salida grupo B<input type="time" id="tc-hora2" step="300"></label><label class="tc-chk tc-f"><input type="checkbox" id="tc-ej"> Incluir 2 tarjetas de ejemplo</label>
           </div>
         </section>
         <section class="gc-card" id="tc-jug-card">
@@ -2154,7 +2154,7 @@ dash.calc('analisis', {
     CATS.forEach((c, i) => { const cb = tcEl(`tc-cat-${i}`); if (cb.checked) { n++; prem[c.k] = c.hoyo ? [tcEl(`tc-cath-${i}`).value, tcEl(`tc-cath2-${i}`).value, tcEl(`tc-cath3-${i}`).value].filter(Boolean).map(Number) : null; } });
     CATS.forEach((c, i) => { const cb = tcEl(`tc-cat-${i}`); cb.disabled = !cb.checked && n >= 5; });
     tcEl('tc-count').textContent = `${n} de 5`;
-    TC.premios = prem; TC.hora = tcEl('tc-hora').value; TC.hora2 = tcEl('tc-hora2').value;
+    TC.premios = prem; TC.hora = tcEl('tc-hora').value; TC.hora2 = tcEl('tc-hora2').value; TC.ejemplos = tcEl('tc-ej').checked;
     TC.tubos = TUBOS.map((t, i) => ({ ...t, on: tcEl(`tc-tub-${i}`).checked, n: +tcEl(`tc-tubn-${i}`).value || 1, h: t.hoyo ? +tcEl(`tc-tubh-${i}`).value : null })).filter((t) => t.on);
     tcEl('tc-tcount').textContent = `${d3.sum(TC.tubos, (t) => t.n)} tubos`;
     tcEl('tc-tubos-card').hidden = TC.tipo !== 'Turbo';
@@ -2251,11 +2251,11 @@ dash.calc('analisis', {
     { const R = tcRows(); const marca = [R.pares && 'Pares o mejor', R.gir && 'GIR'].filter(Boolean).join(' y ');
       EJ[0].nota = `encierra el score según la simbología; anota los Pts${R.putts ? ', los putts' : ''}${marca ? ' y marca ✓ en ' + marca : ''}.${R.dardos ? ' H11 y H15: dardos (✓ en Dardos).' : ''} H16: triple bogey = 0 pts.`;
       EJ[1].nota = `H5 no terminado (*): se anota el score mínimo sin puntos (par + 2 + golpes recibidos, tope par + 3) y 0 pts${R.putts ? '; los putts quedan en blanco' : ''}.${R.dardos ? ' H2: dardo.' : ''} Al final suma IDA, VTA y TOT.`; }
-    cards.push(tcCard('EJEMPLO 1', 11, 'Cómo llenar la tarjeta', holes, EJ[0]), tcCard('EJEMPLO 2', 18, 'Hoyo sin terminar', holes, EJ[1]));
+    if (TC.ejemplos) cards.push(tcCard('EJEMPLO 1', 11, 'Cómo llenar la tarjeta', holes, EJ[0]), tcCard('EJEMPLO 2', 18, 'Hoyo sin terminar', holes, EJ[1]));
     let html = '';
     for (let i = 0; i < cards.length; i += 2) html += `<div class="tc-sheet">${cards[i]}${cards[i + 1] ? '<div class="tc-cut">✂ cortar</div>' + cards[i + 1] : ''}</div>`;
     box.innerHTML = html;
-    tcEl('tc-sum').textContent = `${sel.length} tarjetas + 2 de ejemplo · ${Math.ceil(cards.length / 2)} hojas A4 · ${TC.cancha}${TC.tipo !== 'Regular' ? ' · ' + TC.tipo : ''}`;
+    tcEl('tc-sum').textContent = `${sel.length} tarjetas${TC.ejemplos ? ' + 2 de ejemplo' : ''} · ${Math.ceil(cards.length / 2)} hojas A4 · ${TC.cancha}${TC.tipo !== 'Regular' ? ' · ' + TC.tipo : ''}`;
     tcScale();
   };
   const tcScale = () => {
