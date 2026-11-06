@@ -364,7 +364,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       <div class="gc-next-head"><h2>Última fecha regular · Definición del campeón regular</h2><span class="gc-next-tag">Sábado 7 de noviembre · Club de Golf Cachagua · Organiza JPA</span></div>
       <div class="gc-next-grid">
         <div><h3>9:50 · Grupo A</h3><ul><li>MAP</li><li>JPA</li><li>JPE</li><li>LALO</li></ul></div>
-        <div><h3>10:00 · Grupo B</h3><ul><li>VCV</li><li>PIS</li><li>LAA</li><li>CSC</li></ul></div>
+        <div><h3>10:00 · Grupo B</h3><ul><li>CSC</li></ul><p class="note">No van: PIS, VCV y LAA.</p></div>
         <div><h3>Puntos extra (10 c/u)</h3><ul><li>GIR</li><li>Best Approach · hoyo 17</li><li>Long Drive · hoyo 18</li><li>Más pares o mejor</li><li>Mejor vuelta (neto)</li></ul></div>
       </div>
     </section>
@@ -2123,14 +2123,15 @@ dash.calc('analisis', {
     // Cachagua: LALO confirmado (9); el resto estimado en proporción a Los Leones (× 9/11) hasta tener los pantallazos
     TC.est = { 'Cachagua': { LAA: 10, JPA: 10, PIS: 11, JPE: 9, MAP: 16, VCV: 16, CSC: 13 } };
     const hcpDe = (c, j) => (HCP_CANCHA[c] && HCP_CANCHA[c][j] != null ? Math.min(18, HCP_CANCHA[c][j]) : '');
-    PLAYERS.forEach((j) => { TC.jug[j] = { on: true, hcp: hcpDe(TC.cancha, j), rival: '' }; });
+    const AUSENTES = ['PIS', 'VCV', 'LAA']; // no van a Cachagua 7/11 (informado por LALO 2026-11-06)
+    PLAYERS.forEach((j) => { TC.jug[j] = { on: !AUSENTES.includes(j), hcp: hcpDe(TC.cancha, j), rival: '' }; });
     const opt = (v, t, s) => `<option value="${esc(v)}"${s ? ' selected' : ''}>${esc(t)}</option>`;
     tcEl('tc-cancha').innerHTML = canchas.map((c) => opt(c, c, c === TC.cancha)).join('');
     tcEl('tc-tipo').innerHTML = Object.keys(TIPOS).map((t) => opt(t, t, t === TC.tipo)).join('');
     tcEl('tc-org').innerHTML = ['Directorio', ...PLAYERS].map((p) => opt(p, p, p === TC.organiza)).join('');
     const pos = Object.fromEntries(tabla.filter((r) => r.temporada === 2026).map((r) => [r.jugador, r.pos]));
     const order = [...PLAYERS].sort((a, b) => (pos[a] ?? 9) - (pos[b] ?? 9));
-    tcEl('tc-jug').innerHTML = order.map((j) => `<div class="tc-prow" data-j="${j}"><label class="tc-chk"><input type="checkbox" id="tc-on-${j}" checked> <span class="gc-pname"><i style="background:${color(j)}"></i>${j}</span></label>
+    tcEl('tc-jug').innerHTML = order.map((j) => `<div class="tc-prow" data-j="${j}"><label class="tc-chk"><input type="checkbox" id="tc-on-${j}"${TC.jug[j].on ? ' checked' : ''}> <span class="gc-pname"><i style="background:${color(j)}"></i>${j}</span></label>
       <label class="tc-mini">hcp <input type="number" min="0" max="54" id="tc-hcp-${j}" value="${TC.jug[j].hcp}"></label></div>`).join('');
     const hsel = (id, val, label, empty) => `<select id="${id}" aria-label="${esc(label)}">${empty ? opt('', empty, !val) : ''}${d3.range(1, 19).map((h) => opt(h, 'H' + h, val === h)).join('')}</select>`;
     tcEl('tc-prem').innerHTML = CATS.map((c, i) => { const hs = Array.isArray(TC.premios[c.k]) ? TC.premios[c.k] : []; return `<div class="tc-cat"><label class="tc-chk"><input type="checkbox" id="tc-cat-${i}"${c.k in TC.premios ? ' checked' : ''}> ${c.k}</label>${c.hoyo ? `<span class="tc-holes">${hsel(`tc-cath-${i}`, hs[0] ?? 1, 'Hoyo ' + c.k)}<span class="tc-ronda">si no:</span>${hsel(`tc-cath2-${i}`, hs[1], 'Alternativo 1 ' + c.k, '—')}${hsel(`tc-cath3-${i}`, hs[2], 'Alternativo 2 ' + c.k, '—')}</span>` : '<span class="tc-ronda">toda la ronda</span>'}</div>`; }).join('');
