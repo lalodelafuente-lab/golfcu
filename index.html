@@ -2119,9 +2119,9 @@ dash.calc('analisis', {
     const canchas = [...new Set(campos.map((c) => c.cancha))].sort();
     const last = {}; hoyos.forEach((h) => { if (!last[h.jugador] || h.fecha > last[h.jugador].f) last[h.jugador] = { f: h.fecha, hcp: +h.hcp }; });
     // Hcp de juego por cancha informado por el grupo (app ChileGolf; tope 18 Ley JPE). Sin dato: queda en blanco para escribirlo a mano.
-    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 }, 'Cachagua': { LALO: 9, LAA: 10, JPA: 10, PIS: 11, JPE: 9, MAP: 16, VCV: 16, CSC: 13 } };
-    // Cachagua: LALO confirmado (9); el resto estimado en proporción a Los Leones (× 9/11) hasta tener los pantallazos
-    TC.est = { 'Cachagua': { LAA: 10, JPA: 10, PIS: 11, JPE: 9, MAP: 16, VCV: 16, CSC: 13 } };
+    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 }, 'Cachagua': { LALO: 9, LAA: 10, JPA: 10, PIS: 11, JPE: 8, MAP: 16, VCV: 16, CSC: 13 } };
+    // Cachagua: LALO (9) y JPE (8) confirmados; el resto estimado en proporción a Los Leones (× 9/11) hasta tener los pantallazos
+    TC.est = { 'Cachagua': { LAA: 10, JPA: 10, PIS: 11, MAP: 16, VCV: 16, CSC: 13 } };
     const hcpDe = (c, j) => (HCP_CANCHA[c] && HCP_CANCHA[c][j] != null ? Math.min(18, HCP_CANCHA[c][j]) : '');
     const AUSENTES = ['PIS', 'VCV', 'LAA']; // no van a Cachagua 7/11 (informado por LALO 2026-11-06)
     PLAYERS.forEach((j) => { TC.jug[j] = { on: !AUSENTES.includes(j), hcp: hcpDe(TC.cancha, j), rival: '' }; });
