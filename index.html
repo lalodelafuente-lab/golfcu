@@ -513,7 +513,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
     <section class="gc-card" id="palmares-card">
       <h2>Palmarés</h2>
       <div class="gc-tablewrap"><table class="gc-table" id="palmares" data-source="palmares" data-row-key="temporada"><thead><tr>
-        <th class="l" data-field="temporada">Temporada</th><th class="l" data-field="campeon_regular">Campeón regular</th><th class="l" data-field="campeon_golfcu">Campeón Golfcu</th><th class="l" data-field="championship_cancha">Championship</th><th class="l" data-field="penultimo">Penúltimo ($100.000)</th><th class="l" data-field="ultimo">Último ($200.000)</th>
+        <th class="l" data-field="temporada">Temporada</th><th class="l" data-field="campeon_regular">Campeón regular</th><th class="l" data-field="campeon_golfcu">Campeón Golfcu</th><th class="l" data-field="championship_cancha">Championship</th><th class="l" data-field="penultimo">Penúltimo</th><th class="l" data-field="ultimo">Último</th>
       </tr></thead><tbody></tbody></table></div>
     </section>
     <section class="gc-card" id="estacion-card">
@@ -696,7 +696,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
         <ul class="gc-bases">
           <li><b>Cuota 2026:</b> $25.000 por fecha. El green fee y las invitaciones las paga cada uno aparte.</li>
           <li><b>Premios:</b> el campeón regular y el Championship reparten cada uno su bolsa 50% / 30% / 20% entre los tres primeros.</li>
-          <li><b>Último y penúltimo de la fase regular:</b> pagan $200.000 y $100.000, o pueden dejar el campeonato. Además cocinan el asado de fin de año, con el menú que definen el 1º y el 2º.</li>
+          <li><b>Último y penúltimo de la fase regular:</b> pagan $100.000 y $50.000 (desde 2026; antes $200.000 y $100.000), o pueden dejar el campeonato. Además cocinan el asado de fin de año, con el menú que definen el 1º y el 2º.</li>
           <li><b>Hoyo en uno:</b> cada jugador le deposita $100.000 a quien lo haga. No lo hace campeón, salvo que sea en el Championship.</li>
         </ul>
       </section>
@@ -889,7 +889,7 @@ dash.calc('tabla', {
         r.gap_lider = Math.round((d3.max(list, (o) => o.total) - r.total) * 100) / 100;
         r.prom_fecha = Math.round((r.total / r.fechas) * 100) / 100;
         r.ajuste_hcp = HCP[r.pos] ?? null;
-        r.zona = r.pos === n ? 'Último · paga $200.000' : r.pos === n - 1 ? 'Penúltimo · paga $100.000' : r.pos === 1 ? 'Líder' : '';
+        r.zona = r.pos === n ? 'Último · paga $100.000' : r.pos === n - 1 ? 'Penúltimo · paga $50.000' : r.pos === 1 ? 'Líder' : '';
         r.clasifica = r.fechas >= 6;
       });
       out.push(...list);
