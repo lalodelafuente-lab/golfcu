@@ -535,10 +535,11 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       </tr></thead><tbody></tbody></table></div>
     </section>
     <section class="gc-card" id="hs-card">
-      <h2>Estadísticas generales de juego (todas las temporadas)</h2>
+      <h2 id="hs-title">Estadísticas generales de juego</h2>
+      <div class="gc-chips" id="chips-hyear"></div>
       <p class="note">Rondas individuales con tarjeta hoyo a hoyo (regulares, Turbo y Championship). Score bruto, sin hándicap. Putts y GIR solo en rondas con putts anotados.</p>
       <div class="gc-tablewrap"><table class="gc-table" id="hs-tabla" data-source="stats_hist" data-row-key="jugador"><thead><tr>
-        <th class="l" data-field="jugador">Jugador</th><th data-field="rondas">Rondas</th><th data-field="stb_prom">Stb prom.</th><th data-field="gross_prom">Gross prom.</th><th data-field="mejor_gross">Mejor gross</th><th data-field="birdie">Birdie+</th><th data-field="par">Par</th><th data-field="bogey">Bogey</th><th data-field="doble">Doble+</th><th data-field="gir">GIR</th><th data-field="putts_ronda">Putts/ronda</th><th data-field="p1">1 putt</th><th data-field="p3">3+ putts</th>
+        <th class="l" data-field="jugador">Jugador</th><th data-field="rondas">Rondas</th><th data-field="stb_prom">Stb prom.</th><th data-field="gross_prom">Gross prom.</th><th data-field="mejor_gross">Mejor gross</th><th data-field="birdie">Birdie+</th><th data-field="par">Par</th><th data-field="bogey">Bogey</th><th data-field="doble">Doble+</th><th data-field="gir">GIR</th><th data-field="putts_ronda">Putts/ronda</th><th data-field="putts_hoyo">Putts/hoyo</th><th data-field="p1">1 putt</th><th data-field="p3">3+ putts</th>
       </tr></thead><tbody></tbody></table></div>
     </section>
     <div class="gc-grid">
@@ -547,6 +548,10 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
         <div class="gc-chips" id="chips-hg"></div>
         <div class="gc-legend" id="leg-hg"></div>
         <div class="gc-chart dash-skeleton" id="hg" data-source="stats_hist"></div>
+      </section>
+      <section class="gc-card" id="hpp-card">
+        <h2>Promedio de putts por hoyo · histórico</h2>
+        <div class="gc-chart dash-skeleton" id="hpp" data-source="stats_hist"></div>
       </section>
       <section class="gc-card" id="hp-card">
         <h2>Putts por ronda · histórico</h2>
@@ -948,17 +953,18 @@ dash.calc('putts_dist', {
 
 dash.calc('stats_hist', {
   inputs: ['hoyos'], title: 'Estadísticas generales de juego',
-  description: 'Por jugador, todas las temporadas, rondas individuales con 18 hoyos de tarjeta: Stableford y gross promedio, mejor gross, % de hoyos en birdie o mejor, par, bogey y doble o peor; en rondas con putts: GIR %, putts por ronda y % de hoyos con 0, 1, 2, 3 y 4+ putts.',
+  description: 'Por jugador y temporada (y "Todos" = todas las temporadas juntas), rondas individuales con 18 hoyos de tarjeta: Stableford y gross promedio, mejor gross, % de hoyos en birdie o mejor, par, bogey y doble o peor; en rondas con putts: GIR %, putts por ronda y % de hoyos con 0, 1, 2, 3 y 4+ putts.',
   fn: (hoyos) => {
     const out = [];
-    d3.group(hoyos, (h) => h.jugador).forEach((hs, jugador) => {
+    const grupos = [['Todos', hoyos], ...Array.from(d3.group(hoyos, (h) => String(h.temporada)))];
+    grupos.forEach(([temporada, hsT]) => d3.group(hsT, (h) => h.jugador).forEach((hs, jugador) => {
       const rondas = Array.from(d3.group(hs, (h) => h.fecha).values()).filter((r) => r.length === 18);
       if (!rondas.length) return;
       const all = rondas.flat(), n = all.length, dif = (h) => +h.golpes - +h.par;
       const conP = rondas.filter((r) => r.every((h) => h.putts != null && h.putts !== '') && d3.sum(r, (h) => +h.putts) > 0), ap = conP.flat(), m = ap.length, c = [0, 0, 0, 0, 0];
       ap.forEach((h) => { c[Math.min(4, +h.putts)] += 1; });
       const gross = rondas.map((r) => d3.sum(r, (h) => +h.golpes));
-      out.push({ jugador, rondas: rondas.length,
+      out.push({ temporada, jugador, rondas: rondas.length,
         stb_prom: Math.round(d3.mean(rondas, (r) => d3.sum(r, (h) => +h.stb)) * 10) / 10,
         gross_prom: Math.round(d3.mean(gross) * 10) / 10, mejor_gross: d3.min(gross),
         birdie: all.filter((h) => dif(h) < 0).length / n, par: all.filter((h) => dif(h) === 0).length / n,
@@ -966,9 +972,10 @@ dash.calc('stats_hist', {
         rondas_putts: conP.length,
         gir: m ? ap.filter((h) => +h.golpes - +h.putts <= +h.par - 2).length / m : null,
         putts_ronda: m ? Math.round((d3.sum(ap, (h) => +h.putts) / conP.length) * 10) / 10 : null,
+        putts_hoyo: m ? Math.round((d3.sum(ap, (h) => +h.putts) / m) * 100) / 100 : null,
         p0: m ? c[0] / m : null, p1: m ? c[1] / m : null, p2: m ? c[2] / m : null, p3: m ? c[3] / m : null, p4: m ? c[4] / m : null,
       });
-    });
+    }));
     return out;
   },
 });
@@ -1365,7 +1372,7 @@ dash.calc('analisis', {
   const TABS = ['temporada-2026', 'temporada-2025', 'fecha', 'canchas', 'historico', 'jugador', 'tarjetas', 'bases', 'datos'];
   let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'temporada-2026';
   const sortState = {};
-  let compCat = 'total'; const golpesSel = new Set(['par']); const puttsSel = new Set(['p1']); const hgSel = new Set(['par']); const hpSel = new Set(['p1']);
+  let compCat = 'total'; const golpesSel = new Set(['par']); const puttsSel = new Set(['p1']); const hgSel = new Set(['par']); const hpSel = new Set(['p1']); let hYear = 'Todos';
   const STROKE = (r) => r.tipo !== 'Scramble' && r.tipo !== 'Otra modalidad';
   let HOYO_FECHAS = new Set();
 
@@ -1711,9 +1718,15 @@ dash.calc('analisis', {
     const hs = dash.data('stats_hist');
     if (hs.status === 'error') { fail(document.querySelector('#hs-tabla tbody')); fail(document.getElementById('hg')); fail(document.getElementById('hp')); }
     else if (hs.status === 'ok') {
-      ['hg', 'hp'].forEach((id) => document.getElementById(id).classList.remove('dash-skeleton'));
+      ['hg', 'hp', 'hpp'].forEach((id) => document.getElementById(id).classList.remove('dash-skeleton'));
+      const yrs = ['Todos', ...Array.from(new Set(hs.data.map((d) => d.temporada).filter((t) => t !== 'Todos'))).sort()];
+      if (!yrs.includes(hYear)) hYear = 'Todos';
+      chips(document.getElementById('chips-hyear'), yrs.map((y) => ({ value: y, label: y })), hYear, (v2) => { hYear = v2; renderAll(); });
+      document.getElementById('hs-title').textContent = `Estadísticas generales de juego · ${hYear === 'Todos' ? 'todas las temporadas' : hYear}`;
+      ['hg-card', 'hp-card', 'hpp-card'].forEach((id) => { const h2 = document.querySelector(`#${id} h2`); h2.textContent = h2.textContent.replace(/ · .*$/, '') + ` · ${hYear === 'Todos' ? 'histórico' : hYear}`; });
+      const HD = hs.data.filter((d) => d.temporada === hYear);
       const pct = (x) => (x == null ? '—' : pf.format(x));
-      sortable(document.getElementById('hs-tabla'), hs.data, [
+      sortable(document.getElementById('hs-tabla'), HD, [
         { val: (r) => r.jugador, show: (r) => pname(r.jugador), l: true },
         { val: (r) => r.rondas, num: true },
         { val: (r) => r.stb_prom, show: (r) => nf.format(r.stb_prom), num: true, cls: () => 'tot' },
@@ -1725,16 +1738,19 @@ dash.calc('analisis', {
         { val: (r) => r.doble, show: (r) => pct(r.doble), num: true },
         { val: (r) => r.gir ?? -1, show: (r) => pct(r.gir), num: true },
         { val: (r) => r.putts_ronda ?? 99, show: (r) => (r.putts_ronda == null ? '—' : nf.format(r.putts_ronda)), num: true },
+        { val: (r) => r.putts_hoyo ?? 99, show: (r) => (r.putts_hoyo == null ? '—' : nf.format(r.putts_hoyo)), num: true },
         { val: (r) => r.p1 ?? -1, show: (r) => pct(r.p1), num: true },
         { val: (r) => (r.p3 ?? 0) + (r.p4 ?? 0), show: (r) => (r.p3 == null ? '—' : pf.format(r.p3 + r.p4)), num: true },
       ], (r) => enc(r.jugador), { i: 2, dir: -1 });
       const gcH = [GC.PAL[2], GC.PAL[0], GC.PAL[1], 'var(--cds-chart-muted)'];
-      multiChart({ box: document.getElementById('hg'), chipBox: document.getElementById('chips-hg'), legEl: document.getElementById('leg-hg'), data: hs.data,
+      multiChart({ box: document.getElementById('hg'), chipBox: document.getElementById('chips-hg'), legEl: document.getElementById('leg-hg'), data: HD,
         keys: ['birdie', 'par', 'bogey', 'doble'], short: ['Birdie o mejor', 'Par', 'Bogey', 'Doble o peor'], names: ['Birdie o mejor', 'Par', 'Bogey', 'Doble o peor'], colors: gcH, sel: hgSel,
         legText: (l) => `% de hoyos en: ${l}. Toca una o varias categorías para sumarlas.` });
-      multiChart({ box: document.getElementById('hp'), chipBox: document.getElementById('chips-hp'), legEl: document.getElementById('leg-hp'), data: hs.data.filter((d) => d.putts_ronda != null),
+      multiChart({ box: document.getElementById('hp'), chipBox: document.getElementById('chips-hp'), legEl: document.getElementById('leg-hp'), data: HD.filter((d) => d.putts_ronda != null),
         keys: ['p0', 'p1', 'p2', 'p3', 'p4'], short: ['0', '1', '2', '3', '4+'], names: ['0 putts', '1 putt', '2 putts', '3 putts', '4+ putts'], colors: [GC.PAL[2], GC.PAL[0], 'var(--cds-chart-muted)', GC.PAL[1], GC.PAL[3]], sel: hpSel,
         legText: (l) => `% de hoyos con ${l}, y putts promedio por ronda. Toca uno o varios para sumarlos.`, extra: (d) => ` · ${nf.format(d.putts_ronda)}/ronda` });
+      const hpd = HD.filter((d) => d.putts_hoyo != null).sort((a, b) => a.putts_hoyo - b.putts_hoyo);
+      hbars(document.getElementById('hpp'), hpd, ['putts_hoyo'], [GC.PAL[3]], { names: ['Putts por hoyo'], fmt: (v) => nf.format(v), total: (d) => d.putts_hoyo, label: (d) => `${nf.format(d.putts_hoyo)} · ${d.rondas_putts} ronda${d.rondas_putts === 1 ? '' : 's'}` });
     }
 
     const pm = dash.data('palmares');
