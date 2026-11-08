@@ -869,7 +869,10 @@ dash.calc('tabla', {
         let total = d3.sum(regs, (r) => +r.pts_total), descarte = null, lugar = d3.sum(regs, (r) => +r.pts_lugar), extra = d3.sum(regs, (r) => +r.pts_extra);
         let gan_rec = null;
         if (rec) gan_rec = 0;
-        if (rec && +rec.pts_total > peor) { total += +rec.pts_total - peor; descarte = peor; gan_rec = Math.round((+rec.pts_total - peor) * 100) / 100; lugar += +rec.pts_lugar; extra += +rec.pts_extra; }
+        if (rec && +rec.pts_total > peor) {
+          total += +rec.pts_total - peor; descarte = peor; gan_rec = Math.round((+rec.pts_total - peor) * 100) / 100; lugar += +rec.pts_lugar; extra += +rec.pts_extra;
+          if (regs.length >= nReg) { const w = regs.reduce((m, r) => (+r.pts_total < +m.pts_total ? r : m)); lugar -= +w.pts_lugar; extra -= +w.pts_extra; }
+        }
         return {
           temporada, jugador,
           total: Math.round(total * 100) / 100,
@@ -1550,7 +1553,7 @@ dash.calc('analisis', {
       document.getElementById('final-title').textContent = rows.length ? `Golfcu Championship ${s} · campeón ${rows.filter((x) => x.lugar === 1).map((x) => x.jugador).join(', ')}` : `Golfcu Championship ${s}`;
       document.getElementById('final-note').textContent = rows.length
         ? `${fdateY(rows[0].fecha)} · ${rows[0].cancha}`
-        : 'Diciembre · por jugarse';
+        : 'Diciembre · Las Brisas de Santo Domingo · por jugarse';
       ftbl.closest('.gc-tablewrap').hidden = !rows.length;
       sortable(ftbl, rows, [
         { val: (r) => r.lugar, show: (r) => `${r.lugar}º`, num: true, cls: (r) => r.lugar === 1 ? 'best' : null },
@@ -1561,7 +1564,8 @@ dash.calc('analisis', {
       ], (r) => `${r.temporada},${enc(r.jugador)}`, { i: 0, dir: 1 });
     }
 
-    document.getElementById('champ-title').textContent = s === 2026 ? 'Camino al Championship 2026 (proyección con la tabla actual)' : `Cierre fase regular ${s} (antes del Championship)`;
+    const finReg = dash.data('puntos').status === 'ok' && dash.data('puntos').data.some((x) => x.fecha === '2026-11-07');
+    document.getElementById('champ-title').textContent = s === 2026 && !finReg ? 'Camino al Championship 2026 (proyección con la tabla actual)' : `Cierre fase regular ${s} (antes del Championship)`;
     if (t.status === 'error') fail(document.querySelector('#champ tbody'));
     else if (t.status === 'ok') {
       sortable(document.getElementById('champ'), t.data.filter((x) => x.temporada === s), [
