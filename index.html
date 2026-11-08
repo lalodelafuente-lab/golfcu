@@ -430,6 +430,12 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
         <h2>Promedio de putts por hoyo</h2>
         <div class="gc-chart dash-skeleton" id="putts" data-source="golpes_pct"></div>
       </section>
+      <section class="gc-card" id="puttsdist-card">
+        <h2>Putts por ronda</h2>
+        <div class="gc-chips" id="chips-putts"></div>
+        <div class="gc-legend" id="leg-putts"></div>
+        <div class="gc-chart dash-skeleton" id="puttsdist" data-source="putts_dist"></div>
+      </section>
     </div>
   </section>
 
@@ -902,6 +908,23 @@ dash.calc('golpes_pct', {
   })),
 });
 
+dash.calc('putts_dist', {
+  inputs: ['hoyos'], title: 'Distribución de putts por jugador',
+  description: 'Por jugador y temporada, solo rondas con putts anotados en los 18 hoyos: % de hoyos con 0, 1, 2, 3 y 4 o más putts, y putts promedio por ronda.',
+  fn: (hoyos) => {
+    const out = [];
+    d3.group(hoyos, (h) => +h.temporada, (h) => h.jugador).forEach((byJ, temporada) => byJ.forEach((hs, jugador) => {
+      const rondas = Array.from(d3.group(hs, (h) => h.fecha).values()).filter((r) => r.length === 18 && r.every((h) => h.putts != null && h.putts !== '') && d3.sum(r, (h) => +h.putts) > 0);
+      if (!rondas.length) return;
+      const all = rondas.flat(), n = all.length, c = [0, 0, 0, 0, 0];
+      all.forEach((h) => { c[Math.min(4, +h.putts)] += 1; });
+      out.push({ temporada, jugador, rondas: rondas.length, hoyos: n, p0: c[0] / n, p1: c[1] / n, p2: c[2] / n, p3: c[3] / n, p4: c[4] / n,
+        putts_ronda: Math.round((d3.sum(all, (h) => +h.putts) / rondas.length) * 10) / 10 });
+    }));
+    return out;
+  },
+});
+
 dash.calc('premios_cat', {
   inputs: ['premios'], title: 'Premios por jugador y categoría',
   description: 'Premios extra por jugador, categoría y temporada: solo cuenta 1 y compartido 0,5 (puntos / 10).',
@@ -1294,7 +1317,7 @@ dash.calc('analisis', {
   const TABS = ['temporada-2026', 'temporada-2025', 'fecha', 'canchas', 'historico', 'jugador', 'tarjetas', 'bases', 'datos'];
   let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'temporada-2026';
   const sortState = {};
-  let compCat = 'total'; const golpesSel = new Set(['par']);
+  let compCat = 'total'; const golpesSel = new Set(['par']); const puttsSel = new Set(['p1']);
   const STROKE = (r) => r.tipo !== 'Scramble' && r.tipo !== 'Otra modalidad';
   let HOYO_FECHAS = new Set();
 
@@ -1536,6 +1559,24 @@ dash.calc('analisis', {
       comp.classList.remove('dash-skeleton');
       const cd = [...t.data.filter((x) => x.temporada === s)].sort((a, b) => b[compCat] - a[compCat]);
       hbars(comp, cd, ['pts_lugar', 'pts_extra'], [GC.PAL[0], GC.PAL[1]], { names: ['Lugar', 'Extra'], fmt: (v2) => `${nf.format(v2)} pts`, total: (d) => d.total, label: (d) => compCat === 'total' ? nf.format(d.total) : `${nf.format(d[compCat])} de ${nf.format(d.total)}`, focus: compCat === 'pts_lugar' ? 0 : compCat === 'pts_extra' ? 1 : null });
+    }
+
+    const pdd = dash.data('putts_dist'), pdbox = document.getElementById('puttsdist');
+    if (pdd.status === 'error') fail(pdbox);
+    else if (pdd.status === 'ok') {
+      pdbox.classList.remove('dash-skeleton');
+      const PK = ['p0', 'p1', 'p2', 'p3', 'p4'], PN = ['0 putts', '1 putt', '2 putts', '3 putts', '4+ putts'];
+      const PC = [GC.PAL[2], GC.PAL[0], 'var(--cds-chart-muted)', GC.PAL[1], GC.PAL[3]];
+      const PCAT = PK.map((k, i) => ({ value: k, label: ['0', '1', '2', '3', '4+'][i], color: PC[i] }));
+      const cb = document.getElementById('chips-putts');
+      chips(cb, PCAT, null, (v2) => { if (puttsSel.has(v2)) { if (puttsSel.size > 1) puttsSel.delete(v2); } else puttsSel.add(v2); renderAll(); });
+      cb.querySelectorAll('button').forEach((bt, i) => bt.setAttribute('aria-pressed', String(puttsSel.has(PK[i]))));
+      const sk = PK.filter((k) => puttsSel.has(k)), ord = [...sk, ...PK.filter((k) => !puttsSel.has(k))];
+      const pv = (d) => d3.sum(sk, (k) => d[k]);
+      const pdata = pdd.data.filter((x) => x.temporada === s).sort((a, b) => pv(b) - pv(a) || a.putts_ronda - b.putts_ronda);
+      const lab = sk.length === 5 ? 'todos' : sk.map((k) => PN[PK.indexOf(k)]).join(' + ');
+      document.getElementById('leg-putts').textContent = `% de hoyos con ${lab}, y putts promedio por ronda. Toca uno o varios para sumarlos.`;
+      hbars(pdbox, pdata, ord, ord.map((k) => PC[PK.indexOf(k)]), { names: ord.map((k) => PN[PK.indexOf(k)]), fmt: (v2) => pf.format(v2), total: () => 1, max: 1, label: (d) => `${pf.format(pv(d))} · ${nf.format(d.putts_ronda)}/ronda`, focus: sk.map((_, i) => i) });
     }
 
     const g = dash.data('golpes_pct'), gbox = document.getElementById('golpes'), pbox = document.getElementById('putts');
