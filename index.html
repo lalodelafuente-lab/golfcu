@@ -1346,7 +1346,7 @@ dash.calc('analisis', {
   const TABS = ['temporada-2026', 'temporada-2025', 'fecha', 'canchas', 'historico', 'jugador', 'tarjetas', 'bases', 'viaje', 'datos'];
   let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'temporada-2026';
   const sortState = {};
-  let compCat = 'total', golpesCat = 'par';
+  let compCat = 'total'; const golpesSel = new Set(['par']);
   const STROKE = (r) => r.tipo !== 'Scramble' && r.tipo !== 'Otra modalidad';
   let HOYO_FECHAS = new Set();
 
@@ -1592,16 +1592,25 @@ dash.calc('analisis', {
 
     const g = dash.data('golpes_pct'), gbox = document.getElementById('golpes'), pbox = document.getElementById('putts');
     const gc = [GC.PAL[2], GC.PAL[0], GC.PAL[1], 'var(--cds-chart-muted)'];
-    legend(document.getElementById('leg-golpes'), [[gc[0], 'Birdie o mejor'], [gc[1], 'Par'], [gc[2], 'Bogey'], [gc[3], 'Doble bogey o peor']]);
+    
     if (g.status === 'error') { fail(gbox); fail(pbox); }
     else if (g.status === 'ok') {
       [gbox, pbox].forEach((b) => b.classList.remove('dash-skeleton'));
-      const GCAT = [{ value: 'par', label: 'Par' }, { value: 'birdie', label: 'Birdie o mejor' }, { value: 'bogey', label: 'Bogey' }, { value: 'doble', label: 'Doble o peor' }];
-      chips(document.getElementById('chips-golpes'), GCAT, golpesCat, (v2) => { golpesCat = v2; renderAll(); });
-      const gv = (d) => golpesCat === 'parmejor' ? d.birdie + d.par : d[golpesCat];
+      const KEYS = ['birdie', 'par', 'bogey', 'doble'], NAMES = ['Birdie+', 'Par', 'Bogey', 'Doble+'];
+      const GCAT = [{ value: 'birdie', label: 'Birdie o mejor', color: gc[0] }, { value: 'par', label: 'Par', color: gc[1] }, { value: 'bogey', label: 'Bogey', color: gc[2] }, { value: 'doble', label: 'Doble o peor', color: gc[3] }];
+      const chipBox = document.getElementById('chips-golpes');
+      chips(chipBox, GCAT, null, (v2) => {
+        if (golpesSel.has(v2)) { if (golpesSel.size > 1) golpesSel.delete(v2); } else golpesSel.add(v2);
+        renderAll();
+      });
+      chipBox.querySelectorAll('button').forEach((bt, i) => bt.setAttribute('aria-pressed', String(golpesSel.has(GCAT[i].value))));
+      const selK = KEYS.filter((k) => golpesSel.has(k));
+      const order = [...selK, ...KEYS.filter((k) => !golpesSel.has(k))];
+      const gv = (d) => d3.sum(selK, (k) => d[k]);
       const data = g.data.filter((x) => x.temporada === s).sort((a, b) => gv(b) - gv(a));
-      const gLab = GCAT.find((c) => c.value === golpesCat).label.toLowerCase();
-      hbars(gbox, data, ['birdie', 'par', 'bogey', 'doble'], gc, { names: ['Birdie+', 'Par', 'Bogey', 'Doble+'], fmt: (v2) => pf.format(v2), total: () => 1, max: 1, label: (d) => `${pf.format(gv(d))} ${gLab}`, focus: { parmejor: [0, 1], birdie: 0, par: 1, bogey: 2, doble: 3 }[golpesCat] });
+      const gLab = selK.length === 4 ? 'todas (100 %)' : selK.map((k) => GCAT.find((c) => c.value === k).label.toLowerCase()).join(' + ');
+      hbars(gbox, data, order, order.map((k) => gc[KEYS.indexOf(k)]), { names: order.map((k) => NAMES[KEYS.indexOf(k)]), fmt: (v2) => pf.format(v2), total: () => 1, max: 1, label: (d) => pf.format(gv(d)), focus: selK.map((_, i) => i) });
+      document.getElementById('leg-golpes').textContent = `% de hoyos en: ${gLab}. Toca una o varias categorías para sumarlas.`;
       const pd = data.filter((x) => x.putts_hoyo != null).sort((a, b) => a.putts_hoyo - b.putts_hoyo);
       hbars(pbox, pd, ['putts_hoyo'], [GC.PAL[3]], { names: ['Putts por hoyo'], fmt: (v) => nf.format(v), total: (d) => d.putts_hoyo, label: (d) => nf.format(d.putts_hoyo) });
     }
