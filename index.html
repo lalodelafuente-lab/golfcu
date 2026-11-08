@@ -534,6 +534,27 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
         <th class="l" data-field="jugador">Jugador</th><th data-field="temporadas">Temporadas</th><th data-field="fechas">Fechas</th><th data-field="puntos">Puntos</th><th data-field="prom_fecha">Prom. por fecha</th><th data-field="victorias">Victorias</th><th data-field="podios">Podios</th><th data-field="premios">Premios extra</th><th data-field="prom_stb">Stableford prom.</th><th data-field="mejor_stb">Mejor Stableford</th><th data-field="championships">Championships</th>
       </tr></thead><tbody></tbody></table></div>
     </section>
+    <section class="gc-card" id="hs-card">
+      <h2>Estadísticas generales de juego (todas las temporadas)</h2>
+      <p class="note">Rondas individuales con tarjeta hoyo a hoyo (regulares, Turbo y Championship). Score bruto, sin hándicap. Putts y GIR solo en rondas con putts anotados.</p>
+      <div class="gc-tablewrap"><table class="gc-table" id="hs-tabla" data-source="stats_hist" data-row-key="jugador"><thead><tr>
+        <th class="l" data-field="jugador">Jugador</th><th data-field="rondas">Rondas</th><th data-field="stb_prom">Stb prom.</th><th data-field="gross_prom">Gross prom.</th><th data-field="mejor_gross">Mejor gross</th><th data-field="birdie">Birdie+</th><th data-field="par">Par</th><th data-field="bogey">Bogey</th><th data-field="doble">Doble+</th><th data-field="gir">GIR</th><th data-field="putts_ronda">Putts/ronda</th><th data-field="p1">1 putt</th><th data-field="p3">3+ putts</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+    <div class="gc-grid">
+      <section class="gc-card" id="hg-card">
+        <h2>Distribución de golpes · histórico</h2>
+        <div class="gc-chips" id="chips-hg"></div>
+        <div class="gc-legend" id="leg-hg"></div>
+        <div class="gc-chart dash-skeleton" id="hg" data-source="stats_hist"></div>
+      </section>
+      <section class="gc-card" id="hp-card">
+        <h2>Putts por ronda · histórico</h2>
+        <div class="gc-chips" id="chips-hp"></div>
+        <div class="gc-legend" id="leg-hp"></div>
+        <div class="gc-chart dash-skeleton" id="hp" data-source="stats_hist"></div>
+      </section>
+    </div>
     <div class="gc-grid">
       <section class="gc-card" id="slope-card">
         <h2>Posición final por temporada</h2>
@@ -921,6 +942,33 @@ dash.calc('putts_dist', {
       out.push({ temporada, jugador, rondas: rondas.length, hoyos: n, p0: c[0] / n, p1: c[1] / n, p2: c[2] / n, p3: c[3] / n, p4: c[4] / n,
         putts_ronda: Math.round((d3.sum(all, (h) => +h.putts) / rondas.length) * 10) / 10 });
     }));
+    return out;
+  },
+});
+
+dash.calc('stats_hist', {
+  inputs: ['hoyos'], title: 'Estadísticas generales de juego',
+  description: 'Por jugador, todas las temporadas, rondas individuales con 18 hoyos de tarjeta: Stableford y gross promedio, mejor gross, % de hoyos en birdie o mejor, par, bogey y doble o peor; en rondas con putts: GIR %, putts por ronda y % de hoyos con 0, 1, 2, 3 y 4+ putts.',
+  fn: (hoyos) => {
+    const out = [];
+    d3.group(hoyos, (h) => h.jugador).forEach((hs, jugador) => {
+      const rondas = Array.from(d3.group(hs, (h) => h.fecha).values()).filter((r) => r.length === 18);
+      if (!rondas.length) return;
+      const all = rondas.flat(), n = all.length, dif = (h) => +h.golpes - +h.par;
+      const conP = rondas.filter((r) => r.every((h) => h.putts != null && h.putts !== '') && d3.sum(r, (h) => +h.putts) > 0), ap = conP.flat(), m = ap.length, c = [0, 0, 0, 0, 0];
+      ap.forEach((h) => { c[Math.min(4, +h.putts)] += 1; });
+      const gross = rondas.map((r) => d3.sum(r, (h) => +h.golpes));
+      out.push({ jugador, rondas: rondas.length,
+        stb_prom: Math.round(d3.mean(rondas, (r) => d3.sum(r, (h) => +h.stb)) * 10) / 10,
+        gross_prom: Math.round(d3.mean(gross) * 10) / 10, mejor_gross: d3.min(gross),
+        birdie: all.filter((h) => dif(h) < 0).length / n, par: all.filter((h) => dif(h) === 0).length / n,
+        bogey: all.filter((h) => dif(h) === 1).length / n, doble: all.filter((h) => dif(h) >= 2).length / n,
+        rondas_putts: conP.length,
+        gir: m ? ap.filter((h) => +h.golpes - +h.putts <= +h.par - 2).length / m : null,
+        putts_ronda: m ? Math.round((d3.sum(ap, (h) => +h.putts) / conP.length) * 10) / 10 : null,
+        p0: m ? c[0] / m : null, p1: m ? c[1] / m : null, p2: m ? c[2] / m : null, p3: m ? c[3] / m : null, p4: m ? c[4] / m : null,
+      });
+    });
     return out;
   },
 });
@@ -1317,7 +1365,7 @@ dash.calc('analisis', {
   const TABS = ['temporada-2026', 'temporada-2025', 'fecha', 'canchas', 'historico', 'jugador', 'tarjetas', 'bases', 'datos'];
   let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'temporada-2026';
   const sortState = {};
-  let compCat = 'total'; const golpesSel = new Set(['par']); const puttsSel = new Set(['p1']);
+  let compCat = 'total'; const golpesSel = new Set(['par']); const puttsSel = new Set(['p1']); const hgSel = new Set(['par']); const hpSel = new Set(['p1']);
   const STROKE = (r) => r.tipo !== 'Scramble' && r.tipo !== 'Otra modalidad';
   let HOYO_FECHAS = new Set();
 
@@ -1374,6 +1422,15 @@ dash.calc('analisis', {
   };
   const legend = (el, items) => el.replaceChildren(...items.map(([c, l]) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = c; s.append(i, l); return s; }));
 
+  const multiChart = ({ box, chipBox, legEl, data, keys, short, names, colors, sel, legText, extra }) => {
+    chips(chipBox, keys.map((k, i) => ({ value: k, label: short[i], color: colors[i] })), null, (v2) => { if (sel.has(v2)) { if (sel.size > 1) sel.delete(v2); } else sel.add(v2); renderAll(); });
+    chipBox.querySelectorAll('button').forEach((bt, i) => bt.setAttribute('aria-pressed', String(sel.has(keys[i]))));
+    const sk = keys.filter((k) => sel.has(k)), ord = [...sk, ...keys.filter((k) => !sel.has(k))];
+    const v = (d) => d3.sum(sk, (k) => d[k]);
+    const rows = [...data].sort((a, b) => v(b) - v(a));
+    legEl.textContent = legText(sk.length === keys.length ? 'todas las categorías' : sk.map((k) => names[keys.indexOf(k)].toLowerCase()).join(' + '));
+    hbars(box, rows, ord, ord.map((k) => colors[keys.indexOf(k)]), { names: ord.map((k) => names[keys.indexOf(k)]), fmt: (x) => pf.format(x), total: () => 1, max: 1, label: (d) => pf.format(v(d)) + (extra ? extra(d) : ''), focus: sk.map((_, i) => i) });
+  };
   const hbars = (box, data, keys, colors, { names, fmt, total, label, max, focus }) => {
     const foc = focus == null ? null : [].concat(focus);
     const rowH = 30, H = data.length * rowH + 8;
@@ -1650,6 +1707,35 @@ dash.calc('analisis', {
         { val: (r) => r.championships, show: (r) => r.championships ? '🏆 ' + r.championships : '—', num: true },
       ], (r) => enc(r.jugador), { i: 3, dir: -1 });
     } else if (h.status === 'error') { fail(take); fail(document.querySelector('#h-tabla tbody')); }
+
+    const hs = dash.data('stats_hist');
+    if (hs.status === 'error') { fail(document.querySelector('#hs-tabla tbody')); fail(document.getElementById('hg')); fail(document.getElementById('hp')); }
+    else if (hs.status === 'ok') {
+      ['hg', 'hp'].forEach((id) => document.getElementById(id).classList.remove('dash-skeleton'));
+      const pct = (x) => (x == null ? '—' : pf.format(x));
+      sortable(document.getElementById('hs-tabla'), hs.data, [
+        { val: (r) => r.jugador, show: (r) => pname(r.jugador), l: true },
+        { val: (r) => r.rondas, num: true },
+        { val: (r) => r.stb_prom, show: (r) => nf.format(r.stb_prom), num: true, cls: () => 'tot' },
+        { val: (r) => r.gross_prom, show: (r) => nf.format(r.gross_prom), num: true },
+        { val: (r) => r.mejor_gross, num: true },
+        { val: (r) => r.birdie, show: (r) => pct(r.birdie), num: true },
+        { val: (r) => r.par, show: (r) => pct(r.par), num: true },
+        { val: (r) => r.bogey, show: (r) => pct(r.bogey), num: true },
+        { val: (r) => r.doble, show: (r) => pct(r.doble), num: true },
+        { val: (r) => r.gir ?? -1, show: (r) => pct(r.gir), num: true },
+        { val: (r) => r.putts_ronda ?? 99, show: (r) => (r.putts_ronda == null ? '—' : nf.format(r.putts_ronda)), num: true },
+        { val: (r) => r.p1 ?? -1, show: (r) => pct(r.p1), num: true },
+        { val: (r) => (r.p3 ?? 0) + (r.p4 ?? 0), show: (r) => (r.p3 == null ? '—' : pf.format(r.p3 + r.p4)), num: true },
+      ], (r) => enc(r.jugador), { i: 2, dir: -1 });
+      const gcH = [GC.PAL[2], GC.PAL[0], GC.PAL[1], 'var(--cds-chart-muted)'];
+      multiChart({ box: document.getElementById('hg'), chipBox: document.getElementById('chips-hg'), legEl: document.getElementById('leg-hg'), data: hs.data,
+        keys: ['birdie', 'par', 'bogey', 'doble'], short: ['Birdie o mejor', 'Par', 'Bogey', 'Doble o peor'], names: ['Birdie o mejor', 'Par', 'Bogey', 'Doble o peor'], colors: gcH, sel: hgSel,
+        legText: (l) => `% de hoyos en: ${l}. Toca una o varias categorías para sumarlas.` });
+      multiChart({ box: document.getElementById('hp'), chipBox: document.getElementById('chips-hp'), legEl: document.getElementById('leg-hp'), data: hs.data.filter((d) => d.putts_ronda != null),
+        keys: ['p0', 'p1', 'p2', 'p3', 'p4'], short: ['0', '1', '2', '3', '4+'], names: ['0 putts', '1 putt', '2 putts', '3 putts', '4+ putts'], colors: [GC.PAL[2], GC.PAL[0], 'var(--cds-chart-muted)', GC.PAL[1], GC.PAL[3]], sel: hpSel,
+        legText: (l) => `% de hoyos con ${l}, y putts promedio por ronda. Toca uno o varios para sumarlos.`, extra: (d) => ` · ${nf.format(d.putts_ronda)}/ronda` });
+    }
 
     const pm = dash.data('palmares');
     if (pm.status === 'error') fail(document.querySelector('#palmares tbody'));
