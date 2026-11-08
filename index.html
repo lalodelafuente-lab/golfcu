@@ -348,7 +348,6 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       <button role="tab" data-tab="jugador" id="tab-jugador">Jugador</button>
       <button role="tab" data-tab="tarjetas" id="tab-tarjetas">Tarjetas</button>
       <button role="tab" data-tab="bases" id="tab-bases">Bases</button>
-      <button role="tab" data-tab="viaje" id="tab-viaje">Viaje Córdoba</button>
       <button role="tab" data-tab="datos" id="tab-datos">Datos</button>
     </nav>
   </div>
@@ -713,57 +712,6 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
     </div>
   </section>
 
-  <!-- VIAJE CORDOBA -->
-  <section class="gc-page" id="viaje" hidden>
-    <section class="gc-card">
-      <h2>Gira Golfcu · Córdoba, Argentina</h2>
-      <p class="gc-bases-lead">4 días, 4 canchas, 8 jugadores en dos líneas de 4. Vuelo directo Santiago–Córdoba (~1h30; LATAM, Sky y Aerolíneas Argentinas). <b>Fecha por definir:</b> lo ideal es abril–mayo 2027 (otoño, canchas verdes) o la primera quincena de noviembre.</p>
-    </section>
-    <div class="gc-bases-grid">
-      <section class="gc-card">
-        <h3>Día 1 · Jueves — Jockey Club Córdoba</h3>
-        <ul class="gc-bases">
-          <li>Llegada a mediodía y vuelta de tarde en la ciudad.</li>
-          <li>Parkland par 72. Sirve para soltar el swing.</li>
-          <li>Noche en Córdoba o Villa Allende.</li>
-        </ul>
-      </section>
-      <section class="gc-card">
-        <h3>Día 2 · Viernes — El Potrerillo de Larreta</h3>
-        <ul class="gc-bases">
-          <li>Alta Gracia, a unos 30 km de Córdoba. Es la cancha estrella de la gira.</li>
-          <li>Par 72, 5 salidas por hoyo y vistas a las sierras.</li>
-          <li>Almuerzo en la hostería. Noche en Córdoba o Villa Allende.</li>
-        </ul>
-      </section>
-      <section class="gc-card">
-        <h3>Día 3 · Sábado — Estancia La Paz</h3>
-        <ul class="gc-bases">
-          <li>Ascochinga, Sierras Chicas. Par 72, diseño Bunge Golf, entre parque centenario y río.</li>
-          <li>Noche en la estancia: hotel boutique en el casco que fue de Julio A. Roca.</li>
-          <li><b>Cena de premiación</b> del Stableford en el Restaurant 1830.</li>
-        </ul>
-      </section>
-      <section class="gc-card">
-        <h3>Día 4 · Domingo — Córdoba Golf Club</h3>
-        <ul class="gc-bases">
-          <li>Villa Allende, la cancha de Eduardo Romero y Ángel Cabrera. Par 71.</li>
-          <li>Salida temprano y luego al aeropuerto, a unos 20 minutos.</li>
-          <li>Recibe visitas entre semana y los domingos. El sábado es solo para socios y el lunes está cerrado.</li>
-        </ul>
-      </section>
-      <section class="gc-card">
-        <h3>Pendientes</h3>
-        <ul class="gc-bases">
-          <li>Definir fecha y confirmar los 8.</li>
-          <li>Reservar tee times en las 4 canchas al mismo tiempo. El Córdoba Golf Club exige reserva anticipada.</li>
-          <li>Confirmar salida del sábado en Estancia La Paz. Si no hay, se invierte con el viernes.</li>
-          <li>Cotizar vuelos, alojamiento y van para traslados.</li>
-          <li>Definir si la gira suma como fecha del campeonato.</li>
-        </ul>
-      </section>
-    </div>
-  </section>
 
   <!-- DATOS -->
   <section class="gc-page" id="datos" hidden>
@@ -1343,7 +1291,7 @@ dash.calc('analisis', {
 (() => {
   const { nf, pf, PLAYERS, color, fdate, fdateY, tip, fail, season, sel, toggleSel, pname, svgFresh, textW } = GC;
   const enc = encodeURIComponent;
-  const TABS = ['temporada-2026', 'temporada-2025', 'fecha', 'canchas', 'historico', 'jugador', 'tarjetas', 'bases', 'viaje', 'datos'];
+  const TABS = ['temporada-2026', 'temporada-2025', 'fecha', 'canchas', 'historico', 'jugador', 'tarjetas', 'bases', 'datos'];
   let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'temporada-2026';
   const sortState = {};
   let compCat = 'total'; const golpesSel = new Set(['par']);
