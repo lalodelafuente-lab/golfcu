@@ -1588,7 +1588,7 @@ dash.calc('analisis', {
       document.getElementById('final-title').textContent = rows.length ? `Golfcu Championship ${s} · campeón ${rows.filter((x) => x.lugar === 1).map((x) => x.jugador).join(', ')}` : `Golfcu Championship ${s}`;
       document.getElementById('final-note').textContent = rows.length
         ? `${fdateY(rows[0].fecha)} · ${rows[0].cancha}`
-        : 'Diciembre · Las Brisas de Santo Domingo · por jugarse';
+        : 'Viernes 27 de noviembre · Los Leones · por jugarse';
       ftbl.closest('.gc-tablewrap').hidden = !rows.length;
       sortable(ftbl, rows, [
         { val: (r) => r.lugar, show: (r) => `${r.lugar}º`, num: true, cls: (r) => r.lugar === 1 ? 'best' : null },
@@ -2221,7 +2221,9 @@ dash.calc('analisis', {
   ];
   const TUBOS_DEF = ['1er Score Neto', '1er Score Gross', 'Menos 3 putts', 'Scrambling', 'Más birdies o mejor', 'Putter del día', 'Dardos'];
   const TIPOS = { Regular: '', Turbo: '× 1,5', Recuperativa: '× 0,8', Scramble: '', Championship: 'Final' };
-  const TC = { init: false, fecha: '2026-11-07', tipo: 'Regular', organiza: 'JPA', cancha: 'Cachagua', jug: {}, premios: { 'GIR': null, 'Best Approach': [17], 'Long Drive': [18], 'Más Pares o Mejor': null, 'Mejor Vuelta (Neto)': null }, tubos: [], hora: '09:50', hora2: '10:00', metros: {} };
+  const TC = { init: false, fecha: '2026-11-27', tipo: 'Championship', organiza: 'Directorio', cancha: 'Los Leones', jug: {}, premios: { 'FIR': null, 'GIR': null, 'Menos Putts': null, 'Más Pares o Mejor': null }, tubos: [], hora: '11:30', hora2: '11:40', metros: {},
+    // Championship 2026: 8 premios (comunicado 23/11/2026; hoyos confirmados por LALO 25/11/2026)
+    champ: [{ ab: 'FIR', t: 'FIR' }, { ab: 'GIR', t: 'GIR' }, { ab: 'LD1', t: 'Long Drive 1', hs: [4, 9] }, { ab: 'LD2', t: 'Long Drive 2', hs: [17, 18], rifa: true }, { ab: 'BA1', t: 'Best Approach 1', hs: [6], rifa: true }, { ab: 'BA2', t: 'Best Approach 2', hs: [14], rifa: true }, { ab: 'MP', t: 'Menos putts' }, { ab: 'PO', t: 'Más pares o mejor' }] };
   const tcEl = (id) => document.getElementById(id);
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -2231,11 +2233,11 @@ dash.calc('analisis', {
     const canchas = [...new Set(campos.map((c) => c.cancha))].sort();
     const last = {}; hoyos.forEach((h) => { if (!last[h.jugador] || h.fecha > last[h.jugador].f) last[h.jugador] = { f: h.fecha, hcp: +h.hcp }; });
     // Hcp de juego por cancha informado por el grupo (app ChileGolf; tope 18 Ley JPE). Sin dato: queda en blanco para escribirlo a mano.
-    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 12, JPA: 12, PIS: 13, JPE: 11, MAP: 19, VCV: 20, CSC: 16 }, 'Cachagua': { LALO: 9, LAA: 10, JPA: 9, PIS: 11, JPE: 8, MAP: 15, VCV: 16, CSC: 13 } };
+    const HCP_CANCHA = { 'Los Leones': { LALO: 11, LAA: 13, JPA: 11, PIS: 13, JPE: 10, MAP: 18, VCV: 18 }, 'Cachagua': { LALO: 9, LAA: 10, JPA: 9, PIS: 11, JPE: 8, MAP: 15, VCV: 16, CSC: 13 } };
     // Cachagua: LALO 9, JPE 8, JPA 9, MAP 15 y CSC 13 confirmados; el resto estimado en proporción a Los Leones (× 9/11) hasta tener los pantallazos
     TC.est = { 'Cachagua': { LAA: 10, PIS: 11, VCV: 16 } };
     const hcpDe = (c, j) => (HCP_CANCHA[c] && HCP_CANCHA[c][j] != null ? Math.min(18, HCP_CANCHA[c][j]) : '');
-    const AUSENTES = ['PIS', 'VCV', 'LAA']; // no van a Cachagua 7/11 (informado por LALO 2026-11-06)
+    const AUSENTES = ['CSC']; // no juega el Championship 27/11 (informado por LALO 2026-11-25; se le hace una excepción)
     PLAYERS.forEach((j) => { TC.jug[j] = { on: !AUSENTES.includes(j), hcp: hcpDe(TC.cancha, j), rival: '' }; });
     const opt = (v, t, s) => `<option value="${esc(v)}"${s ? ' selected' : ''}>${esc(t)}</option>`;
     tcEl('tc-cancha').innerHTML = canchas.map((c) => opt(c, c, c === TC.cancha)).join('');
@@ -2288,14 +2290,14 @@ dash.calc('analisis', {
       dardos: ht('Dardos'),
     };
     const n = ['pares', 'fir', 'putts', 'gir', 'sandy', 'dardos'].filter((k) => r[k]).length;
-    r.matches = Math.max(2, 3 + (4 - n));
+    r.matches = TC.tipo === 'Championship' && TC.champ ? 2 : Math.max(2, 3 + (4 - n));
     r.anota = [r.putts && 'putts', r.gir && 'GIR', r.fir && 'fairways'].filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' y $1');
     return r;
   };
   const tcCard = (j, hcp, grupo, holes, ex) => {
     const par = holes.map((h) => +h.par), si = holes.map((h) => +h.si);
     const sum = (a) => a.reduce((x, y) => x + y, 0);
-    const hc = hcp == null ? null : Math.min(18, hcp);
+    const hc = hcp == null ? null : (TC.tipo === 'Championship' ? hcp : Math.min(18, hcp));
     const rec = (i) => (hc >= si[i] ? 1 : 0) + (hc >= si[i] + 18 ? 1 : 0);
     let X = null;
     if (ex) {
@@ -2312,6 +2314,8 @@ dash.calc('analisis', {
     const premH = {}; const addH = (h, t) => { (premH[h] = premH[h] || []).push(t); };
     Object.entries(TC.premios).forEach(([k, hs]) => { if (hs) hs.forEach((h, n) => addH(h, { t: CATS.find((c) => c.k === k).ab, alt: n > 0 })); });
     if (TC.tipo === 'Turbo') TC.tubos.filter((t) => t.h).forEach((t) => addH(t.h, { t: '◎', tubo: true }));
+    const CH = TC.tipo === 'Championship' && TC.champ;
+    if (CH) { Object.keys(premH).forEach((h) => { delete premH[h]; }); TC.champ.filter((p) => p.hs).forEach((p) => p.hs.forEach((h, n) => addH(h, { t: p.ab, alt: n > 0 }))); }
     const row = (fn, cls) => { let o = ''; for (let i = 0; i < 18; i++) { o += `<td class="${cls || ''}">${fn(i)}</td>`; if (i === 8) o += `<td class="sub">${fn('ida')}</td>`; } return o + `<td class="sub">${fn('vta')}</td><td class="sub">${fn('tot')}</td>`; };
     const isN = (i) => typeof i === 'number';
     const pz = (v) => (v || []).map((x) => `<span class="pz${x.tubo ? ' tubo' : ''}${x.alt ? ' alt' : ''}">${esc(x.t)}</span>`).join('');
@@ -2338,8 +2342,8 @@ dash.calc('analisis', {
         ${R.dardos ? `<tr class="ex"><th class="lab sm">Dardos</th>${row((i) => isN(i) ? `<span class="box">${X && ex.dardo.includes(i + 1) ? hw('✓') : ''}</span>` : (X ? hw({ ida: ex.dardo.filter((h) => h <= 9).length, vta: ex.dardo.filter((h) => h >= 10).length, tot: ex.dardo.length, stb: '' }[i]) : ''))}</tr>` : ''}
         ${d3.range(ex ? 2 : R.matches).map((m) => `<tr class="mt${m === 0 ? ' mt-first' : ''}"><th class="lab sm">Match</th>${row(() => '')}</tr>`).join('')}
       </table>
-      <div class="foot${tubosTxt ? ' f3' : ''}"><div class="fl"><div class="leg"><b>Puntos extra (10 c/u):</b> ${(() => { const ORD = ['GIR', 'Best Approach', 'Long Drive', 'Más Pares o Mejor', 'Mejor Vuelta (Neto)', 'Menos Putts']; const ks = Object.keys(TC.premios).sort((x, y) => (ORD.indexOf(x) + 1 || 99) - (ORD.indexOf(y) + 1 || 99)); return ks.map((k, n) => { const hs = TC.premios[k]; return `${n + 1}. ` + (hs ? `<span class="pz">${CATS.find((c) => c.k === k).ab}</span> ${esc(k)} H${hs[0]}${hs.length > 1 ? ` (si no: ${hs.slice(1).map((x) => 'H' + x).join(', luego ')})` : ''}` : esc(k)); }).join(' · '); })()}</div>${tubosTxt}
-        ${X ? `<div class="leg ejnota"><b>Ejemplo:</b> ${ex.nota}</div>` : ''}</div><div class="fr"><div class="leg2"><b>Ley JPE:</b> hcp máx. 18 · triple bogey o peor = 0 pts · <span class="red">•</span> = golpe recibido ${R.anota ? ' · anota ' + R.anota + ' en cada hoyo' : ''}${TC.tipo === 'Recuperativa' ? ' · Recuperativa: puntaje × 0,8, borra tu peor resultado' : ''}</div>
+      <div class="foot${tubosTxt ? ' f3' : ''}"><div class="fl"><div class="leg">${CH ? `<b>Premios Championship:</b> ${TC.champ.map((p, n) => `${n + 1}. ${p.hs ? `<span class="pz">${esc(p.ab)}</span> ` : ''}${esc(p.t)}${p.hs ? ' H' + p.hs[0] + (p.hs.length > 1 ? ' (o H' + p.hs.slice(1).join(', H') + (p.rifa ? ' o rifa' : '') + ')' : p.rifa ? ' (o rifa)' : '') : ''}`).join(' · ')}` : `<b>Puntos extra (10 c/u):</b> ${(() => { const ORD = ['GIR', 'Best Approach', 'Long Drive', 'Más Pares o Mejor', 'Mejor Vuelta (Neto)', 'Menos Putts']; const ks = Object.keys(TC.premios).sort((x, y) => (ORD.indexOf(x) + 1 || 99) - (ORD.indexOf(y) + 1 || 99)); return ks.map((k, n) => { const hs = TC.premios[k]; return `${n + 1}. ` + (hs ? `<span class="pz">${CATS.find((c) => c.k === k).ab}</span> ${esc(k)} H${hs[0]}${hs.length > 1 ? ` (si no: ${hs.slice(1).map((x) => 'H' + x).join(', luego ')})` : ''}` : esc(k)); }).join(' · '); })()}`}</div>${tubosTxt}
+        ${X ? `<div class="leg ejnota"><b>Ejemplo:</b> ${ex.nota}</div>` : ''}</div><div class="fr"><div class="leg2"><b>Ley JPE:</b> ${TC.tipo === 'Championship' ? 'hcp ajustado por la tabla regular' : 'hcp máx. 18'} · triple bogey o peor = 0 pts · <span class="red">•</span> = golpe recibido ${R.anota ? ' · anota ' + R.anota + ' en cada hoyo' : ''}${TC.tipo === 'Recuperativa' ? ' · Recuperativa: puntaje × 0,8, borra tu peor resultado' : ''}</div>
         <div class="sig sym"><span><i class="sy ci">4</i> Birdie</span><span><i class="sy sq">6</i> Bogey</span><span><i class="sy sq2">7</i> Doble bogey</span></div></div></div>
     </div>`;
   };
