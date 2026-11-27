@@ -1597,7 +1597,7 @@ dash.calc('analisis', {
     const chPrem = (j) => (CH_PREMIOS[s] || []).filter(([, w]) => w.includes(j)).map(([k, w]) => (w.length > 1 ? `${k} (compartido)` : k));
     const fp = document.getElementById('final-premios');
     fp.hidden = !CH_PREMIOS[s];
-    if (CH_PREMIOS[s]) fp.innerHTML = '<b>Premios del día:</b> ' + CH_PREMIOS[s].map(([k, w]) => `${esc(k)}: ${w.map(esc).join(', ')}`).join(' · ') + '. No suman puntos.';
+    if (CH_PREMIOS[s]) fp.innerHTML = '<b>Premios del día:</b> ' + CH_PREMIOS[s].map(([k, w]) => `${esc(k)}: ${w.map(esc).join(', ')}`).join(' · ') + '. No suman puntos.' + (s === 2026 ? '<br>* CSC no se presentó: queda último por bases, con la excepción acordada por el grupo.' : '');
     const ch = dash.data('championship'), ftbl = document.getElementById('final');
     if (ch.status === 'error') fail(ftbl.tBodies[0]);
     else if (ch.status === 'ok') {
@@ -1607,10 +1607,14 @@ dash.calc('analisis', {
         ? `${fdateY(rows[0].fecha)} · ${rows[0].cancha}`
         : 'Viernes 27 de noviembre · Los Leones · por jugarse';
       ftbl.closest('.gc-tablewrap').hidden = !rows.length;
-      sortable(ftbl, rows, [
-        { val: (r) => r.lugar, show: (r) => `${r.lugar}º`, num: true, cls: (r) => r.lugar === 1 ? 'best' : null },
-        { val: (r) => r.jugador, show: (r) => pname(r.jugador), l: true },
-        { val: (r) => r.stableford, num: true },
+      // Invitados que no se presentaron: quedan últimos por bases (marcados con *)
+      const CH_AUS = { 2026: ['CSC'] };
+      const aus = rows.length ? (CH_AUS[s] || []).map((j) => ({ temporada: s, jugador: j, lugar: rows.length + 1, stableford: null, bolsa: null, aus: true })) : [];
+      const rowsF = [...rows, ...aus];
+      sortable(ftbl, rowsF, [
+        { val: (r) => r.lugar, show: (r) => `${r.lugar}º${r.aus ? '*' : ''}`, num: true, cls: (r) => r.lugar === 1 ? 'best' : null },
+        { val: (r) => r.jugador, show: (r) => { const f = document.createDocumentFragment(); f.append(pname(r.jugador)); if (r.aus) f.append('*'); return f; }, l: true },
+        { val: (r) => r.stableford ?? -1, show: (r) => (r.stableford == null ? 'no jugó' : r.stableford), num: true },
         { val: (r) => r.bolsa, show: (r) => r.bolsa ? pf.format(r.bolsa) : '—', num: true },
         { val: (r) => chPrem(r.jugador).length, show: (r) => chPrem(r.jugador).join(', ') || '—', l: true },
       ], (r) => `${r.temporada},${enc(r.jugador)}`, { i: 0, dir: 1 });
