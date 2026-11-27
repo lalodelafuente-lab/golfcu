@@ -329,6 +329,12 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
 #bases .note { margin: 8px 0; }
 
 .gc-next { border-top-color: var(--gold, #C9A227); }
+.gc-champs { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
+.gc-champ { border:1px solid var(--color-border, rgba(0,0,0,.12)); border-top:4px solid var(--gc-gold); border-radius:10px; padding:12px 16px; background: color-mix(in srgb, var(--gc-gold) 9%, transparent); }
+.gc-champ .k { font-size:.78em; letter-spacing:.08em; text-transform:uppercase; color: var(--color-fg-muted); }
+.gc-champ .v { font-family: var(--gc-serif); font-size:1.9em; line-height:1.1; color: var(--gc-ink); margin:2px 0; }
+.gc-champ .d { font-size:.9em; color: var(--color-fg-muted); }
+.gc-champ.reg { border-top-color: var(--gc-green); background: color-mix(in srgb, var(--gc-green) 7%, transparent); }
 .gc-next-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 16px; margin-bottom:10px; }
 .gc-next-head h2 { margin:0; }
 .gc-next-tag { color: var(--color-fg-muted); font-size: .92em; }
@@ -357,6 +363,7 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
   <!-- TEMPORADA -->
   <section class="gc-page" id="temporada" hidden>
     <p class="gc-take dash-skeleton" id="takeaway" data-source="resumen">—</p>
+    <div class="gc-champs" id="champs-banner" hidden></div>
     <div class="gc-kpis">
       <div class="gc-kpi"><div class="lbl">Líder</div><div class="val" id="k-lider" data-source="resumen" data-field="lider">—</div><div class="sub" id="k-lider-sub" data-source="resumen" data-field="lider_pts">—</div></div>
       <div class="gc-kpi"><div class="lbl">Ventaja sobre el 2º</div><div class="val" id="k-ventaja" data-source="resumen" data-field="ventaja">—</div><div class="sub" id="k-segundo" data-source="resumen" data-field="segundo">—</div></div>
@@ -374,6 +381,15 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       </div>
     </section>
 
+    <section class="gc-card" id="final-card">
+      <h2 id="final-title">Golfcu Championship</h2>
+      <p class="note" id="final-note">La fecha final del año, con hándicap ajustado según la tabla regular. Corona al campeón Golfcu y reparte su bolsa 50% / 30% / 20%. No suma en la fase regular.</p>
+      <div class="gc-tablewrap"><table class="gc-table" id="final" data-source="championship" data-row-key="temporada,jugador"><thead><tr>
+        <th data-field="lugar">Lugar</th><th class="l" data-field="jugador">Jugador</th><th data-field="stableford">Stableford</th><th data-field="bolsa">Bolsa</th><th class="l" data-field="premios">Premios del día</th>
+      </tr></thead><tbody></tbody></table></div>
+      <p class="note" id="final-premios" hidden></p>
+    </section>
+
     <section class="gc-card" id="tabla-general">
       <div class="gc-cardhead"><h2>Tabla general</h2><label class="gc-toggle" id="worst-toggle-wrap"><input type="checkbox" id="worst-toggle" checked> Marcar resultado a borrar (recuperativa)</label></div>
       <div class="gc-tablewrap"><table class="gc-table" id="tabla"><thead></thead><tbody></tbody></table></div>
@@ -385,14 +401,6 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       <div class="gc-chart tall dash-skeleton" id="carrera" data-source="carrera"></div>
     </section>
 
-    <section class="gc-card" id="final-card">
-      <h2 id="final-title">Golfcu Championship</h2>
-      <p class="note" id="final-note">La fecha final del año, con hándicap ajustado según la tabla regular. Corona al campeón Golfcu y reparte su bolsa 50% / 30% / 20%. No suma en la fase regular.</p>
-      <div class="gc-tablewrap"><table class="gc-table" id="final" data-source="championship" data-row-key="temporada,jugador"><thead><tr>
-        <th data-field="lugar">Lugar</th><th class="l" data-field="jugador">Jugador</th><th data-field="stableford">Stableford</th><th data-field="bolsa">Bolsa</th><th class="l" data-field="premios">Premios del día</th>
-      </tr></thead><tbody></tbody></table></div>
-      <p class="note" id="final-premios" hidden></p>
-    </section>
 
     <section class="gc-card" id="championship-card">
       <h2 id="champ-title">Camino al Championship</h2>
@@ -1608,6 +1616,16 @@ dash.calc('analisis', {
       ], (r) => `${r.temporada},${enc(r.jugador)}`, { i: 0, dir: 1 });
     }
 
+    {
+      const bn = document.getElementById('champs-banner'), tb = dash.data('tabla'), chd = dash.data('championship');
+      const reg = tb.status === 'ok' ? tb.data.filter((x) => +x.temporada === s && x.pos === 1) : [];
+      const chw = chd.status === 'ok' ? chd.data.filter((x) => x.temporada === s && x.lugar === 1) : [];
+      const regDone = s !== 2026 || (dash.data('puntos').status === 'ok' && dash.data('puntos').data.some((x) => x.fecha === '2026-11-07'));
+      const cards = [];
+      if (chw.length) cards.push(`<div class="gc-champ"><div class="k">🏆 Campeón Golfcu ${s}</div><div class="v">${chw.map((x) => esc(x.jugador)).join(' y ')}</div><div class="d">${chw[0].stableford} pts Stableford en el Championship · ${esc(chw[0].cancha)}, ${fdateY(chw[0].fecha)}</div></div>`);
+      if (reg.length && regDone) cards.push(`<div class="gc-champ reg"><div class="k">Campeón regular ${s}</div><div class="v">${reg.map((x) => esc(x.jugador)).join(' y ')}</div><div class="d">${nf.format(reg[0].total)} pts en la fase regular</div></div>`);
+      bn.innerHTML = cards.join(''); bn.hidden = !cards.length;
+    }
     const finReg = dash.data('puntos').status === 'ok' && dash.data('puntos').data.some((x) => x.fecha === '2026-11-07');
     document.getElementById('champ-title').textContent = s === 2026 && !finReg ? 'Camino al Championship 2026 (proyección con la tabla actual)' : `Cierre fase regular ${s} (antes del Championship)`;
     if (t.status === 'error') fail(document.querySelector('#champ tbody'));
