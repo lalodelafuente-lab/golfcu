@@ -389,8 +389,9 @@ ul.gc-bases { margin: 0; padding-left: 18px; display: flex; flex-direction: colu
       <h2 id="final-title">Golfcu Championship</h2>
       <p class="note" id="final-note">La fecha final del año, con hándicap ajustado según la tabla regular. Corona al campeón Golfcu y reparte su bolsa 50% / 30% / 20%. No suma en la fase regular.</p>
       <div class="gc-tablewrap"><table class="gc-table" id="final" data-source="championship" data-row-key="temporada,jugador"><thead><tr>
-        <th data-field="lugar">Lugar</th><th class="l" data-field="jugador">Jugador</th><th data-field="stableford">Stableford</th><th data-field="bolsa">Bolsa</th><th class="l" data-field="cancha">Cancha</th>
+        <th data-field="lugar">Lugar</th><th class="l" data-field="jugador">Jugador</th><th data-field="stableford">Stableford</th><th data-field="bolsa">Bolsa</th><th class="l" data-field="premios">Premios del día</th>
       </tr></thead><tbody></tbody></table></div>
+      <p class="note" id="final-premios" hidden></p>
     </section>
 
     <section class="gc-card" id="championship-card">
@@ -1583,6 +1584,12 @@ dash.calc('analisis', {
       rankLines(cbox, all, xs, lab, { getX: (d) => d.fecha, tipHead: (d) => d.fecha === 'final' ? `Golfcu Championship ${s}` : fdateY(d.fecha), tipVal: (d) => `${d.posicion}º${d.ausente ? ' (no jugó)' : ''}` });
     }
 
+    // Premios del día del Championship (no suman puntos; informados por LALO 27/11/2026)
+    const CH_PREMIOS = { 2026: [['FIR', ['VCV']], ['GIR', ['JPA', 'PIS', 'VCV']], ['LD1 · H4', ['LAA']], ['LD2 · H17', ['MAP']], ['BA1 · H6', ['JPA']], ['BA2 · H14', ['VCV']], ['Menos putts', ['JPE']], ['Más pares o mejor', ['JPA']]] };
+    const chPrem = (j) => (CH_PREMIOS[s] || []).filter(([, w]) => w.includes(j)).map(([k, w]) => (w.length > 1 ? `${k} (compartido)` : k));
+    const fp = document.getElementById('final-premios');
+    fp.hidden = !CH_PREMIOS[s];
+    if (CH_PREMIOS[s]) fp.innerHTML = '<b>Premios del día:</b> ' + CH_PREMIOS[s].map(([k, w]) => `${esc(k)}: ${w.map(esc).join(', ')}`).join(' · ') + '. No suman puntos.';
     const ch = dash.data('championship'), ftbl = document.getElementById('final');
     if (ch.status === 'error') fail(ftbl.tBodies[0]);
     else if (ch.status === 'ok') {
@@ -1597,7 +1604,7 @@ dash.calc('analisis', {
         { val: (r) => r.jugador, show: (r) => pname(r.jugador), l: true },
         { val: (r) => r.stableford, num: true },
         { val: (r) => r.bolsa, show: (r) => r.bolsa ? pf.format(r.bolsa) : '—', num: true },
-        { val: (r) => r.cancha, l: true },
+        { val: (r) => chPrem(r.jugador).length, show: (r) => chPrem(r.jugador).join(', ') || '—', l: true },
       ], (r) => `${r.temporada},${enc(r.jugador)}`, { i: 0, dir: 1 });
     }
 
